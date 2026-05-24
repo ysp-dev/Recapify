@@ -28,15 +28,17 @@
       
       <div class="header-actions">
         <!-- Theme Toggle Button -->
-        <button id="btn-theme-toggle" class="btn btn-secondary btn-icon" style="border-radius: 50%; width: 34px; height: 34px;" title="테마 변경">
+        <button id="btn-theme-toggle" class="btn btn-secondary btn-icon" title="테마 변경">
           <i data-lucide="sun" id="theme-toggle-icon"></i>
         </button>
         <!-- Secure API Key Input -->
         <div class="apikey-container">
           <div id="api-key-wrapper" class="apikey-input-wrapper">
-            <i data-lucide="key-round"></i>
-            <input type="password" id="api-key" class="apikey-input" placeholder="OpenAI API Key (sk-...)" autocomplete="current-password">
-            <i class="lock-icon" data-lucide="lock" style="width:14px; height:14px; margin-left:6px;" title="저장됨"></i>
+            <i class="apikey-key-icon" data-lucide="key-round"></i>
+            <input type="password" id="api-key" class="apikey-input" placeholder="API Key" autocomplete="current-password">
+            <button type="button" id="btn-toggle-api-key" class="apikey-toggle" title="API Key 보이기">
+              <i data-lucide="eye"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -54,6 +56,16 @@
         <!-- 1. API Configurations -->
         <div class="settings-box">
           <div class="settings-grid">
+            <!-- Transcription Model Selection -->
+            <div class="form-group">
+              <label for="select-transcribe-model">전사 모델 (STT)</label>
+              <select id="select-transcribe-model" class="select-custom">
+                <option value="gpt-4o-transcribe" selected>GPT-4o Transcribe (권장)</option>
+                <option value="gpt-4o-mini-transcribe">GPT-4o mini Transcribe (빠름)</option>
+                <option value="whisper-1">Whisper-1 (구버전)</option>
+              </select>
+            </div>
+
             <!-- Model Selection -->
             <div class="form-group">
               <label for="select-model">GPT 모델 (요약·Q&A)</label>
@@ -62,16 +74,6 @@
                 <option value="gpt-4.1">GPT-4.1 (안정)</option>
                 <option value="gpt-4.1-mini" selected>GPT-4.1 mini (권장)</option>
                 <option value="gpt-4.1-nano">GPT-4.1 nano (최저비용)</option>
-              </select>
-            </div>
-
-            <!-- Transcription Model Selection -->
-            <div class="form-group">
-              <label for="select-transcribe-model">전사 모델 (STT)</label>
-              <select id="select-transcribe-model" class="select-custom">
-                <option value="gpt-4o-transcribe" selected>GPT-4o Transcribe (권장)</option>
-                <option value="gpt-4o-mini-transcribe">GPT-4o mini Transcribe (빠름)</option>
-                <option value="whisper-1">Whisper-1 (구버전)</option>
               </select>
             </div>
 
@@ -88,10 +90,15 @@
 
             <!-- Transcription Prompt -->
             <div class="form-group style-hint-wrapper">
-              <label for="input-prompt-hint">
-                <i data-lucide="message-square-plus" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i> 전사 힌트
-              </label>
-              <textarea id="input-prompt-hint" class="input-custom" rows="6" placeholder="고유명사, 제품명, 전문 용어만 입력" style="resize:vertical; font-size:11.5px; line-height:1.6;"></textarea>
+              <div class="field-header">
+                <label for="input-prompt-hint">
+                  <i data-lucide="message-square-plus" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i> 전사 힌트
+                </label>
+                <button type="button" id="btn-reset-prompt-hint" class="field-reset-btn" title="전사 힌트 초기화">
+                  <i data-lucide="x"></i>
+                </button>
+              </div>
+              <input type="text" id="input-prompt-hint" class="input-custom" placeholder="고유명사, 제품명, 전문 용어만 입력">
               <div class="prompt-presets">
                 <span class="preset-badge" data-preset="OpenAI, API, SDK, React, TypeScript, 릴리즈, 백로그, 배포">IT 스타트업</span>
                 <span class="preset-badge" data-preset="회의록, 액션아이템, 마일스톤, KPI, OKR, 스프린트, 로드맵">비즈니스</span>
@@ -228,6 +235,10 @@
                 <input type="text" id="transcript-search" placeholder="전사록 단어 검색..." disabled>
               </div>
               <div class="export-actions">
+                <button id="btn-import-transcript" class="btn btn-secondary btn-sm">
+                  <i data-lucide="upload" style="width: 12px; height: 12px;"></i> 가져오기
+                </button>
+                <input type="file" id="transcript-file-input" class="hidden" accept=".txt,.md,.srt,.vtt,.json,text/plain,text/markdown,application/json">
                 <button id="btn-copy-transcript" class="btn btn-secondary btn-sm" disabled>
                   <i data-lucide="copy" style="width: 12px; height: 12px;"></i> 복사
                 </button>
@@ -251,27 +262,33 @@
           <div id="pane-summary" class="pane-content">
             <div class="summary-workspace-grid">
               
-              <!-- Left Mini Sidebar: 5 Format Choices -->
+              <!-- Left Mini Sidebar: Format Choices -->
               <aside class="summary-menu-sidebar">
                 <button class="summary-format-btn active" data-format="summary">
                   <i data-lucide="align-left"></i> 핵심 요약
                 </button>
-                <button class="summary-format-btn" data-format="minutes">
-                  <i data-lucide="clipboard-list"></i> 회의록 & Action Items
-                </button>
                 <button class="summary-format-btn" data-format="notes">
                   <i data-lucide="network"></i> 구조화 노트 (마인드맵)
-                </button>
-                <button class="summary-format-btn" data-format="qa">
-                  <i data-lucide="help-circle"></i> 주요 Q&A
-                </button>
-                <button class="summary-format-btn" data-format="email">
-                  <i data-lucide="mail"></i> 이메일 보고서 초안
                 </button>
               </aside>
 
               <!-- Right Detail Panel: Formatted Markdown Summary Content -->
               <div class="summary-viewer-card">
+                <div class="summary-prompt-panel">
+                  <div class="summary-prompt-header">
+                    <label for="input-summary-prompt">
+                      <i data-lucide="message-square-text"></i> AI 정리 프롬프트
+                    </label>
+                    <div class="summary-prompt-actions">
+                      <button type="button" id="btn-run-summary" class="prompt-run-btn">
+                        <i data-lucide="play"></i> 실행
+                      </button>
+                      <button type="button" id="btn-reset-summary-prompt" class="prompt-reset-btn">초기화</button>
+                    </div>
+                  </div>
+                  <textarea id="input-summary-prompt" class="input-custom summary-prompt-input" rows="5" placeholder="정리 방식, 강조할 관점, 출력 형식 등을 입력하세요. 예: 임원 보고용으로 리스크와 의사결정 중심으로 간결하게 정리"></textarea>
+                </div>
+
                 <div class="viewer-actions-row">
                   <span id="summary-badge" class="badge-accent">OpenAI GPT 분석</span>
                   <div class="export-actions">
@@ -330,7 +347,9 @@
   </div>
 
   <footer class="site-footer">
-    Built by Brian Park using ChatGPT models.
+    <span class="footer-credit">Built by Brian Park</span>
+    <span class="footer-separator"></span>
+    <span class="footer-model">Powered by ChatGPT models</span>
   </footer>
 
   <!-- Notification Popup Toast -->

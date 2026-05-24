@@ -12,10 +12,7 @@ const MAX_OPENAI_REQUEST_RETRIES = 3;
 
 const SUMMARY_MAX_TOKENS = {
   summary: 2000,
-  minutes: 2200,
-  notes: 2200,
-  qa: 1800,
-  email: 1600
+  notes: 2200
 };
 
 const SUMMARY_SYSTEM_PROMPTS = {
@@ -34,21 +31,6 @@ const SUMMARY_SYSTEM_PROMPTS = {
 ## 결론
 간결한 결론 1~2문장`,
 
-  minutes: `당신은 전문 회의록 작성 전문가입니다. 주어진 전사록을 공식 회의록 형식으로 정리하세요.
-
-반드시 다음 구조를 사용하세요:
-## 회의 개요
-표 형식으로 (참석자, 주요 안건 등)
-
-## 안건별 논의 내용
-각 안건을 ### 소제목으로 구분
-
-## Action Items
-| 담당자 | Action Item | 마감일 | 상태 |
-표 형식으로
-
-## 다음 회의 사항`,
-
   notes: `당신은 체계적인 노트 작성 전문가입니다. 주어진 전사록을 구조화된 학습 노트 형식으로 정리하세요.
 
 반드시 다음 구조를 사용하세요:
@@ -63,38 +45,7 @@ const SUMMARY_SYSTEM_PROMPTS = {
 ## 핵심 키워드 & 연관 개념
 키워드 → 설명 형식
 
-## 상세 메모`,
-
-  qa: `당신은 전문 콘텐츠 분석가입니다. 주어진 전사록에서 핵심 Q&A를 추출하거나 생성하세요.
-
-반드시 다음 구조를 사용하세요:
-## 주요 Q&A (5~8개)
-각 Q&A를 ---로 구분, **Q1.** 질문, > 답변 형식
-
-## 핵심 FAQ 표
-| 질문 | 답변 |
-표 형식
-
-## 핵심 논쟁점 또는 미결 사항`,
-
-  email: `당신은 전문 비즈니스 커뮤니케이션 전문가입니다. 전사록 내용을 바탕으로 이메일 보고서 초안을 작성하세요.
-
-반드시 다음 구조를 사용하세요:
-**Subject**: [제목]
-**To**: [수신인]
-
-인사말
-
-## 회의/대화 요약
-핵심 내용 불릿 포인트
-
-## 주요 결정 사항
-번호 목록
-
-## 요청 사항 / 다음 단계
-번호 목록
-
-맺음말 및 서명`
+## 상세 메모`
 };
 
 /* ==========================================================================
@@ -295,8 +246,12 @@ function wavWriteString(view, offset, str) {
   }
 }
 
-async function generateSummary(transcriptText, format, apiKey, model) {
+async function generateSummary(transcriptText, format, apiKey, model, customPrompt) {
   var systemPrompt = SUMMARY_SYSTEM_PROMPTS[format] || SUMMARY_SYSTEM_PROMPTS.summary;
+  if (customPrompt && customPrompt.trim()) {
+    systemPrompt += '\n\n추가 사용자 지침:\n' + customPrompt.trim();
+  }
+
   return enqueueOpenAITextRequest(async function () {
     if (isResponsesModel(model)) {
       var responseData = await fetchOpenAIJsonWithRetry(OPENAI_API_BASE + '/responses', {
@@ -479,10 +434,12 @@ var state = {
   transcribeModel: 'gpt-4o-transcribe',
   language: 'ko',
   promptHint: '',
+  summaryPrompt: '',
   currentFile: null,
+  transcriptSourceName: 'transcript',
   transcriptText: '',
   transcriptParagraphs: [],
-  summaries: { summary: '', minutes: '', notes: '', qa: '', email: '' },
+  summaries: { summary: '', notes: '' },
   summaryRequests: {},
   activeSummaryFormat: 'summary',
   chatHistory: []
@@ -500,6 +457,7 @@ var openAITextRequestQueue = Promise.resolve();
 var elements = {
   apiKeyInput: document.getElementById('api-key'),
   apiKeyWrapper: document.getElementById('api-key-wrapper'),
+  btnToggleApiKey: document.getElementById('btn-toggle-api-key'),
 
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
   themeToggleIcon: document.getElementById('theme-toggle-icon'),
@@ -508,6 +466,10 @@ var elements = {
   selectTranscribeModel: document.getElementById('select-transcribe-model'),
   selectLang: document.getElementById('select-lang'),
   inputPromptHint: document.getElementById('input-prompt-hint'),
+  btnResetPromptHint: document.getElementById('btn-reset-prompt-hint'),
+  inputSummaryPrompt: document.getElementById('input-summary-prompt'),
+  btnRunSummary: document.getElementById('btn-run-summary'),
+  btnResetSummaryPrompt: document.getElementById('btn-reset-summary-prompt'),
 
   uploadZone: document.getElementById('upload-zone'),
   fileInput: document.getElementById('file-input'),
@@ -548,11 +510,14 @@ var elements = {
   paneChat: document.getElementById('pane-chat'),
 
   transcriptSearch: document.getElementById('transcript-search'),
+  btnImportTranscript: document.getElementById('btn-import-transcript'),
+  transcriptFileInput: document.getElementById('transcript-file-input'),
   btnCopyTranscript: document.getElementById('btn-copy-transcript'),
   btnDownloadTranscript: document.getElementById('btn-download-transcript'),
   transcriptContainer: document.getElementById('transcript-container'),
 
   summaryFormatButtons: document.querySelectorAll('.summary-format-btn'),
+  summaryBadge: document.getElementById('summary-badge'),
   summaryContent: document.getElementById('summary-content'),
   btnCopySummary: document.getElementById('btn-copy-summary'),
   btnDownloadSummary: document.getElementById('btn-download-summary'),
@@ -610,10 +575,14 @@ function setupPromptPresets() {
   presets.forEach(function (badge) {
     badge.addEventListener('click', function () {
       presets.forEach(function (b) { b.classList.remove('selected'); });
-      badge.classList.add('selected');
       elements.inputPromptHint.value = badge.getAttribute('data-preset');
       state.promptHint = elements.inputPromptHint.value;
-      showToast('전사 힌트가 설정되었습니다.');
+      if (state.promptHint) {
+        badge.classList.add('selected');
+        showToast('전사 힌트가 설정되었습니다.');
+      } else {
+        showToast('전사 힌트를 초기화했습니다.');
+      }
     });
   });
 }
@@ -641,6 +610,14 @@ function setupApiKey() {
       elements.apiKeyWrapper.classList.remove('secure');
     }
   });
+
+  elements.btnToggleApiKey.addEventListener('click', function () {
+    var isHidden = elements.apiKeyInput.type === 'password';
+    elements.apiKeyInput.type = isHidden ? 'text' : 'password';
+    elements.btnToggleApiKey.setAttribute('title', isHidden ? 'API Key 숨기기' : 'API Key 보이기');
+    elements.btnToggleApiKey.innerHTML = '<i data-lucide="' + (isHidden ? 'eye-off' : 'eye') + '"></i>';
+    if (window.lucide) window.lucide.createIcons();
+  });
 }
 
 function setupSettingsListeners() {
@@ -648,10 +625,29 @@ function setupSettingsListeners() {
   state.transcribeModel = elements.selectTranscribeModel.value;
   state.language = elements.selectLang.value;
   state.promptHint = elements.inputPromptHint.value;
+  state.summaryPrompt = elements.inputSummaryPrompt.value;
   elements.selectModel.addEventListener('change', function (e) { state.model = e.target.value; });
   elements.selectTranscribeModel.addEventListener('change', function (e) { state.transcribeModel = e.target.value; });
   elements.selectLang.addEventListener('change', function (e) { state.language = e.target.value; });
   elements.inputPromptHint.addEventListener('input', function (e) { state.promptHint = e.target.value; });
+  elements.btnResetPromptHint.addEventListener('click', function () {
+    document.querySelectorAll('.preset-badge').forEach(function (b) { b.classList.remove('selected'); });
+    elements.inputPromptHint.value = '';
+    state.promptHint = '';
+    showToast('전사 힌트를 초기화했습니다.');
+  });
+  elements.inputSummaryPrompt.addEventListener('input', function (e) {
+    state.summaryPrompt = e.target.value;
+    state.summaries = { summary: '', notes: '' };
+    state.summaryRequests = {};
+  });
+  elements.btnResetSummaryPrompt.addEventListener('click', function () {
+    elements.inputSummaryPrompt.value = '';
+    state.summaryPrompt = '';
+    state.summaries = { summary: '', notes: '' };
+    state.summaryRequests = {};
+    showToast('AI 정리 프롬프트를 초기화했습니다.');
+  });
 }
 
 /* ==========================================================================
@@ -703,6 +699,7 @@ function setupUploadZone() {
 
 function handleAudioImport(file) {
   state.currentFile = file;
+  state.transcriptSourceName = file.name;
   elements.fileName.textContent = file.name;
   elements.fileSize.textContent = formatBytes(file.size);
 
@@ -724,6 +721,7 @@ function handleAudioImport(file) {
 function resetAudioWorkspace() {
   stopAudioPlayback();
   state.currentFile = null;
+  state.transcriptSourceName = 'transcript';
   elements.fileInput.value = '';
   elements.mainAudio.src = '';
   elements.audioPlayerCard.classList.add('hidden');
@@ -735,7 +733,8 @@ function resetAudioWorkspace() {
 function resetWorkspaceData() {
   state.transcriptText = '';
   state.transcriptParagraphs = [];
-  state.summaries = { summary: '', minutes: '', notes: '', qa: '', email: '' };
+  state.transcriptSourceName = state.currentFile ? state.currentFile.name : 'transcript';
+  state.summaries = { summary: '', notes: '' };
   state.summaryRequests = {};
   state.chatHistory = [];
 
@@ -1006,16 +1005,13 @@ async function triggerTranscribeAI() {
     );
     state.transcriptParagraphs = parseWhisperSegments(whisperData.segments || []);
     state.transcriptText = buildTranscriptText(state.transcriptParagraphs);
+    state.transcriptSourceName = state.currentFile.name;
 
     renderTranscriptTimeline();
 
-    elements.transcriptSearch.disabled = false;
-    elements.btnCopyTranscript.disabled = false;
-    elements.btnDownloadTranscript.disabled = false;
-    elements.chatInput.disabled = false;
-    elements.btnSendChat.disabled = false;
+    enableTranscriptWorkspace();
 
-    triggerSummaryFormatLoad('summary');
+    renderSummaryReadyState();
     setPlayerBadgeState('idle', '대기 중');
     elements.btnTranscribe.disabled = false;
     hideTranscribeProgress();
@@ -1050,6 +1046,83 @@ function buildTranscriptText(paragraphs) {
   return paragraphs.map(function (p) {
     return (p.time ? '[' + p.time + '] ' : '') + p.text;
   }).join('\n');
+}
+
+function parseImportedTranscript(rawText) {
+  var text = (rawText || '').trim();
+  if (!text) return [];
+
+  var jsonSegments = parseImportedTranscriptJson(text);
+  if (jsonSegments) return jsonSegments;
+
+  text = text
+    .replace(/\r\n/g, '\n')
+    .replace(/WEBVTT[^\n]*\n/gi, '')
+    .replace(/^\s*\d+\s*$/gm, '')
+    .replace(/(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3}).*/g, '[$1]');
+
+  var lines = text.split('\n').map(function (line) { return line.trim(); }).filter(Boolean);
+  if (lines.length === 1) {
+    lines = lines[0].match(/[^.!?。！？\n]+[.!?。！？\n]*/g) || lines;
+  }
+
+  return lines.map(function (line, idx) {
+    var parsed = parseImportedTranscriptLine(line);
+    return {
+      id: idx,
+      time: parsed.time,
+      seconds: parsed.seconds,
+      text: parsed.text
+    };
+  }).filter(function (p) { return p.text.length > 0; });
+}
+
+function parseImportedTranscriptJson(text) {
+  try {
+    var data = JSON.parse(text);
+    if (Array.isArray(data)) {
+      return parseWhisperSegments(data.map(function (item) {
+        return { start: item.start || item.seconds || null, text: item.text || item.content || '' };
+      }));
+    }
+    if (Array.isArray(data.segments)) return parseWhisperSegments(data.segments);
+    if (typeof data.text === 'string') return parseImportedTranscript(data.text);
+  } catch (err) {
+    return null;
+  }
+  return null;
+}
+
+function parseImportedTranscriptLine(line) {
+  var time = null;
+  var seconds = -1;
+  var text = line;
+  var match = line.match(/^\[?(\d{1,2}:\d{2}(?::\d{2})?(?:[,.]\d{1,3})?)\]?\s*[-–—:]?\s*(.*)$/);
+  if (match) {
+    seconds = timestampToSeconds(match[1]);
+    time = formatTimestamp(seconds);
+    text = match[2].trim();
+  }
+  return { time: time, seconds: seconds, text: text };
+}
+
+function timestampToSeconds(value) {
+  var clean = String(value).replace(',', '.');
+  var parts = clean.split(':').map(function (part) { return parseFloat(part); });
+  if (parts.length === 2) return Math.floor(parts[0] * 60 + parts[1]);
+  if (parts.length === 3) return Math.floor(parts[0] * 3600 + parts[1] * 60 + parts[2]);
+  return -1;
+}
+
+function formatTimestamp(seconds) {
+  if (seconds < 0) return null;
+  var h = Math.floor(seconds / 3600);
+  var m = Math.floor((seconds % 3600) / 60);
+  var s = Math.floor(seconds % 60);
+  if (h > 0) {
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
 function renderTranscriptTimeline(filterWord) {
@@ -1088,6 +1161,7 @@ function renderTranscriptTimeline(filterWord) {
 
 function seekAudioToSeconds(seconds) {
   if (seconds < 0) return;
+  if (!elements.mainAudio.src) return;
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   elements.mainAudio.currentTime = seconds;
   if (elements.mainAudio.paused) startAudioPlayback();
@@ -1121,14 +1195,47 @@ function setupSummaryActions() {
     btn.addEventListener('click', function () {
       elements.summaryFormatButtons.forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
-      triggerSummaryFormatLoad(btn.getAttribute('data-format'));
+      state.activeSummaryFormat = btn.getAttribute('data-format');
+      if (state.summaries[state.activeSummaryFormat]) {
+        renderSummaryMarkdown(state.summaries[state.activeSummaryFormat]);
+      } else if (!state.summaryPrompt || !state.summaryPrompt.trim()) {
+        renderSummaryPromptRequiredState();
+      } else {
+        renderSummaryReadyState();
+      }
     });
   });
+
+  elements.btnRunSummary.addEventListener('click', function () {
+    runActiveSummary();
+  });
+}
+
+function runActiveSummary() {
+  if (state.transcriptParagraphs.length === 0) {
+    showToast('먼저 전사록을 준비해 주세요.');
+    return;
+  }
+  if (!state.summaryPrompt || !state.summaryPrompt.trim()) {
+    renderSummaryPromptRequiredState();
+    showToast('AI 정리 프롬프트를 먼저 입력해 주세요.');
+    elements.inputSummaryPrompt.focus();
+    return;
+  }
+  if (!state.apiKey) {
+    alert('OpenAI API Key를 입력해주세요.');
+    return;
+  }
+  triggerSummaryFormatLoad(state.activeSummaryFormat || 'summary');
 }
 
 async function triggerSummaryFormatLoad(format) {
   state.activeSummaryFormat = format;
   if (state.transcriptParagraphs.length === 0) return;
+  if (!state.summaryPrompt || !state.summaryPrompt.trim()) {
+    renderSummaryPromptRequiredState();
+    return;
+  }
 
   if (state.summaries[format]) {
     renderSummaryMarkdown(state.summaries[format]);
@@ -1151,9 +1258,10 @@ async function triggerSummaryFormatLoad(format) {
   elements.summaryContent.innerHTML = '<div style="padding:10px 0;display:flex;flex-direction:column;gap:16px;"><div style="width:40%;height:24px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,0.02) 25%,rgba(255,255,255,0.05) 50%,rgba(255,255,255,0.02) 75%);background-size:200% 100%;animation:shimmer-load 1.5s infinite;"></div><div style="width:90%;height:14px;border-radius:4px;background:linear-gradient(90deg,rgba(255,255,255,0.02) 25%,rgba(255,255,255,0.05) 50%,rgba(255,255,255,0.02) 75%);background-size:200% 100%;animation:shimmer-load 1.5s infinite;"></div><div style="width:100%;height:14px;border-radius:4px;background:linear-gradient(90deg,rgba(255,255,255,0.02) 25%,rgba(255,255,255,0.05) 50%,rgba(255,255,255,0.02) 75%);background-size:200% 100%;animation:shimmer-load 1.5s infinite;"></div></div>';
   elements.btnCopySummary.disabled = true;
   elements.btnDownloadSummary.disabled = true;
+  setSummaryBadgeRunning(true);
 
   try {
-    state.summaryRequests[format] = generateSummary(state.transcriptText, format, state.apiKey, state.model);
+    state.summaryRequests[format] = generateSummary(state.transcriptText, format, state.apiKey, state.model, state.summaryPrompt);
     var summaryText = await state.summaryRequests[format];
     state.summaries[format] = summaryText;
     if (state.activeSummaryFormat === format) renderSummaryMarkdown(summaryText);
@@ -1164,6 +1272,7 @@ async function triggerSummaryFormatLoad(format) {
     }
   } finally {
     delete state.summaryRequests[format];
+    setSummaryBadgeRunning(false);
   }
 }
 
@@ -1171,6 +1280,25 @@ function renderSummaryMarkdown(markdown) {
   elements.summaryContent.innerHTML = window.marked ? window.marked.parse(markdown) : markdown;
   elements.btnCopySummary.disabled = false;
   elements.btnDownloadSummary.disabled = false;
+}
+
+function renderSummaryPromptRequiredState() {
+  elements.summaryContent.innerHTML = '<div class="empty-state"><i data-lucide="message-square-warning" class="empty-icon text-accent"></i><h3>AI 정리 프롬프트가 필요합니다</h3><p>위 입력칸에 정리 방식이나 강조할 관점을 입력한 뒤 다시 실행해 주세요.</p></div>';
+  elements.btnCopySummary.disabled = true;
+  elements.btnDownloadSummary.disabled = true;
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function renderSummaryReadyState() {
+  elements.summaryContent.innerHTML = '<div class="empty-state"><i data-lucide="play-circle" class="empty-icon text-accent"></i><h3>AI 정리 대기 중</h3><p>프롬프트와 정리 형식을 확인한 뒤 실행을 눌러 주세요.</p></div>';
+  elements.btnCopySummary.disabled = true;
+  elements.btnDownloadSummary.disabled = true;
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function setSummaryBadgeRunning(isRunning) {
+  elements.summaryBadge.classList.toggle('running', isRunning);
+  elements.summaryBadge.textContent = isRunning ? 'OpenAI GPT 분석 중...' : 'OpenAI GPT 분석';
 }
 
 /* ==========================================================================
@@ -1245,6 +1373,15 @@ function removeChatBubble(id) {
    ========================================================================== */
 
 function setupTranscriptActions() {
+  elements.btnImportTranscript.addEventListener('click', function () {
+    elements.transcriptFileInput.click();
+  });
+
+  elements.transcriptFileInput.addEventListener('change', function (e) {
+    var file = e.target.files[0];
+    if (file) importTranscriptFile(file);
+  });
+
   elements.transcriptSearch.addEventListener('input', function (e) {
     renderTranscriptTimeline(e.target.value);
   });
@@ -1255,7 +1392,7 @@ function setupTranscriptActions() {
   });
 
   elements.btnDownloadTranscript.addEventListener('click', function () {
-    downloadTextFile(state.currentFile.name + '_transcript.txt', state.transcriptText);
+    downloadTextFile(getTranscriptDownloadName(), state.transcriptText);
   });
 
   elements.btnCopySummary.addEventListener('click', function () {
@@ -1266,6 +1403,56 @@ function setupTranscriptActions() {
   elements.btnDownloadSummary.addEventListener('click', function () {
     downloadTextFile(state.currentFile.name + '_summary_' + state.activeSummaryFormat + '.md', state.summaries[state.activeSummaryFormat]);
   });
+}
+
+function importTranscriptFile(file) {
+  var reader = new FileReader();
+  reader.onload = function () {
+    try {
+      var paragraphs = parseImportedTranscript(String(reader.result || ''));
+      if (!paragraphs.length) {
+        throw new Error('읽을 수 있는 전사 텍스트가 없습니다.');
+      }
+
+      resetWorkspaceData();
+      state.transcriptSourceName = file.name;
+      state.transcriptParagraphs = paragraphs.map(function (p, idx) {
+        return {
+          id: idx,
+          time: p.time,
+          seconds: typeof p.seconds === 'number' ? p.seconds : -1,
+          text: p.text
+        };
+      });
+      state.transcriptText = buildTranscriptText(state.transcriptParagraphs);
+
+      renderTranscriptTimeline();
+      enableTranscriptWorkspace();
+      showToast('전사록을 가져왔습니다.');
+    } catch (err) {
+      alert('전사록 가져오기 실패: ' + err.message);
+    } finally {
+      elements.transcriptFileInput.value = '';
+    }
+  };
+  reader.onerror = function () {
+    alert('전사록 파일을 읽지 못했습니다.');
+    elements.transcriptFileInput.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function enableTranscriptWorkspace() {
+  elements.transcriptSearch.disabled = false;
+  elements.btnCopyTranscript.disabled = false;
+  elements.btnDownloadTranscript.disabled = false;
+  elements.chatInput.disabled = false;
+  elements.btnSendChat.disabled = false;
+}
+
+function getTranscriptDownloadName() {
+  var sourceName = state.transcriptSourceName || (state.currentFile && state.currentFile.name) || 'transcript';
+  return sourceName.replace(/\.[^.]+$/, '') + '_transcript.txt';
 }
 
 function downloadTextFile(filename, content) {
@@ -1304,6 +1491,15 @@ function setupTabs() {
       });
       t.btn.classList.add('active');
       t.pane.classList.add('active');
+
+      if (t.pane === elements.paneSummary && (!state.summaryPrompt || !state.summaryPrompt.trim())) {
+        renderSummaryPromptRequiredState();
+        showToast('AI 정리 프롬프트를 먼저 입력해 주세요.');
+        elements.inputSummaryPrompt.focus();
+        return;
+      } else if (t.pane === elements.paneSummary && state.transcriptParagraphs.length > 0 && !state.summaries[state.activeSummaryFormat]) {
+        renderSummaryReadyState();
+      }
 
       if (t.pane === elements.paneTranscript && state.transcriptParagraphs.length > 0) {
         highlightTranscriptPlayback(elements.mainAudio.currentTime);
