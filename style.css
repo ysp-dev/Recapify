@@ -20,6 +20,11 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  /* iOS 홈 화면 웹앱: Dynamic Island / 홈 인디케이터 영역 확보 */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Scrollbar Customization */
