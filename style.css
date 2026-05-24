@@ -78,14 +78,15 @@ body {
   display: none !important;
 }
 
-/* File input: 시각적으로 숨기되 display:none 미사용 (iOS Safari 호환) */
+/* File input: 완전히 뷰포트 밖으로 (iOS Safari display:none 대안) */
 .file-input-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
+  position: fixed;
+  left: -9999px;
+  top: -9999px;
+  width: 0;
+  height: 0;
   opacity: 0;
   pointer-events: none;
-  overflow: hidden;
 }
 
 .file-select-label {
@@ -3253,5 +3254,22 @@ body.light-mode .toast {
   /* 전사록 카드 패딩 축소 */
   .transcript-card {
     padding: 10px;
+  }
+
+  /* 업로드 존 세로 정렬 */
+  .upload-zone {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 16px 12px;
+  }
+
+  .upload-zone-text {
+    text-align: center;
+  }
+
+  .file-select-label {
+    margin-left: 0;
   }
 }
