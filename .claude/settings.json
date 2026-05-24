@@ -5,7 +5,14 @@
       "Bash(awk 'NR>=2520 && NR<=2550 {print NR\": \"$0}' /Users/youngsoonpark/Documents/GitHub/Recapify/style.css)",
       "Bash(awk 'NR>=2100 && NR<=2110 {print NR\": \"$0}' /Users/youngsoonpark/Documents/GitHub/Recapify/style.css)",
       "Bash(awk -F: '$2 > 2060 && $2 < 2550')",
-      "Bash(awk -F: '$2 < 2600')"
+      "Bash(awk -F: '$2 < 2600')",
+      "Bash(git -C /Users/youngsoonpark/Documents/GitHub/Recapify status)",
+      "Bash(git -C /Users/youngsoonpark/Documents/GitHub/Recapify diff --stat)",
+      "Bash(git -C /Users/youngsoonpark/Documents/GitHub/Recapify add style.css)",
+      "Bash(git -C /Users/youngsoonpark/Documents/GitHub/Recapify commit -m ' *)",
+      "Bash(git -C /Users/youngsoonpark/Documents/GitHub/Recapify push)",
+      "Bash(git -C /Users/youngsoonpark/Documents/GitHub/Recapify add app.js)",
+      "Bash(git -C /Users/youngsoonpark/Documents/GitHub/Recapify add app.js style.css index.html)"
     ]
   }
 }
