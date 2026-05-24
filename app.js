@@ -697,6 +697,7 @@ document.addEventListener('DOMContentLoaded', function () {
   setupPromptHistory();
   restoreCachedTranscript();
   startVisualizer();
+  setupPullToRefresh();
   if (window.lucide) window.lucide.createIcons();
 });
 
@@ -1096,6 +1097,60 @@ function initWebAudio() {
   } catch (e) {
     console.warn('Web Audio init failed:', e);
   }
+}
+
+function setupPullToRefresh() {
+  var ptr = document.getElementById('pull-to-refresh');
+  if (!ptr) return;
+  var spinner = document.getElementById('ptr-spinner');
+  var startY = 0;
+  var pulling = false;
+  var THRESHOLD = 80;
+  var MAX_PULL = 120;
+
+  function setPtrY(dist) {
+    var t = Math.min(dist / MAX_PULL, 1);
+    var y = -52 + t * 68; // -52(hidden) → +16(visible)
+    ptr.style.transition = 'none';
+    ptr.style.transform = 'translateX(-50%) translateY(' + y + 'px)';
+    spinner.style.transform = 'rotate(' + (t * 360) + 'deg)';
+  }
+
+  function snapBack() {
+    ptr.style.transition = 'transform 0.25s ease';
+    ptr.style.transform = 'translateX(-50%) translateY(-52px)';
+    ptr.classList.remove('ready', 'loading');
+    spinner.style.transform = '';
+  }
+
+  document.addEventListener('touchstart', function (e) {
+    if (window.scrollY <= 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (!pulling) return;
+    var dist = e.touches[0].clientY - startY;
+    if (dist <= 0) { pulling = false; snapBack(); return; }
+    setPtrY(Math.min(dist, MAX_PULL));
+    ptr.classList.toggle('ready', dist >= THRESHOLD);
+  }, { passive: true });
+
+  document.addEventListener('touchend', function () {
+    if (!pulling) return;
+    pulling = false;
+    if (ptr.classList.contains('ready')) {
+      ptr.style.transition = 'transform 0.2s ease';
+      ptr.style.transform = 'translateX(-50%) translateY(10px)';
+      ptr.classList.add('loading');
+      spinner.style.transform = '';
+      setTimeout(function () { location.reload(); }, 500);
+    } else {
+      snapBack();
+    }
+  });
 }
 
 function startVisualizer() {

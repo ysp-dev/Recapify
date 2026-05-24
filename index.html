@@ -23,6 +23,11 @@
 </head>
 <body>
 
+  <!-- Pull-to-refresh indicator -->
+  <div id="pull-to-refresh" aria-hidden="true">
+    <div id="ptr-spinner"></div>
+  </div>
+
   <div class="app-container">
     <!-- Top Header Bar -->
     <header class="glass-panel">
@@ -105,7 +110,7 @@
             <div class="upload-zone-title">오디오 파일</div>
             <div class="upload-zone-hint">MP3, M4A, WAV, OGG, WEBM</div>
           </div>
-          <label for="file-input" class="btn btn-secondary btn-sm file-select-label" style="flex-shrink:0; margin-left:auto;">파일 선택</label>
+          <label for="file-input" class="btn btn-secondary btn-sm file-select-label">파일 선택</label>
           <input type="file" id="file-input" class="file-input-hidden" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.webm,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/ogg,audio/webm,audio/aac,audio/flac" multiple>
         </div>
 

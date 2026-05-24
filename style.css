@@ -97,6 +97,8 @@ body {
 .file-select-label {
   cursor: pointer;
   user-select: none;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* ==========================================================================
@@ -2456,6 +2458,7 @@ body.light-mode .speed-popup {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--text-muted);
+  border: 1px solid transparent;
 }
 
 .tab-btn:hover {
@@ -3132,4 +3135,48 @@ body.light-mode .toast {
   .file-select-label {
     margin-left: 0;
   }
+}
+
+/* Pull-to-refresh indicator */
+#pull-to-refresh {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-52px);
+  width: 36px;
+  height: 36px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  pointer-events: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+#ptr-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+}
+
+#pull-to-refresh.ready {
+  border-color: var(--primary);
+}
+
+#pull-to-refresh.ready #ptr-spinner {
+  border-color: rgba(139, 92, 246, 0.3);
+  border-top-color: var(--primary);
+}
+
+#pull-to-refresh.loading #ptr-spinner {
+  animation: ptr-spin 0.7s linear infinite;
+}
+
+@keyframes ptr-spin {
+  to { transform: rotate(360deg); }
 }
