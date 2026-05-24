@@ -1078,10 +1078,17 @@ function initWebAudio() {
   if (audioCtx) return;
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Analyser only used for visualizer — silent branch (gain 0) so it never
+    // sits in the playback path. Bluetooth audio is not disrupted by analyser overhead.
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 256;
+    var analyserGain = audioCtx.createGain();
+    analyserGain.gain.value = 0;
+    analyserGain.connect(analyserNode);
+    // analyserNode intentionally NOT connected to destination
 
-    // Voice enhancement nodes (highpass filter + compressor for speech clarity)
+    // Voice enhancement nodes (off by default — avoid double compression on Bluetooth)
     filterNode = audioCtx.createBiquadFilter();
     filterNode.type = 'highpass';
     filterNode.frequency.value = 120;
@@ -1094,11 +1101,11 @@ function initWebAudio() {
     compressorNode.release.value = 0.2;
 
     sourceNode = audioCtx.createMediaElementSource(elements.mainAudio);
-    // Default: voice enhance ON (sourceNode → filter → compressor → analyser → dest)
-    sourceNode.connect(filterNode);
-    filterNode.connect(compressorNode);
-    compressorNode.connect(analyserNode);
-    analyserNode.connect(audioCtx.destination);
+    // Default OFF: sourceNode → destination (cleanest path for Bluetooth)
+    sourceNode.connect(analyserGain);
+    sourceNode.connect(audioCtx.destination);
+
+    sourceNode._analyserGain = analyserGain;
   } catch (e) {
     console.warn('Web Audio init failed:', e);
   }
@@ -1107,17 +1114,24 @@ function initWebAudio() {
 function applyVoiceEnhancement(enabled) {
   if (!audioCtx || !sourceNode) return;
   try {
+    var analyserGain = sourceNode._analyserGain;
     sourceNode.disconnect();
-    filterNode.disconnect();
-    compressorNode.disconnect();
-    if (enabled) {
-      sourceNode.connect(filterNode);
-      filterNode.connect(compressorNode);
-      compressorNode.connect(analyserNode);
+    if (analyserGain) {
+      filterNode.disconnect();
+      compressorNode.disconnect();
+      if (enabled) {
+        // sourceNode → filter → compressor → destination
+        //           ↘ analyserGain → analyserNode (silent branch)
+        sourceNode.connect(filterNode);
+        filterNode.connect(compressorNode);
+        compressorNode.connect(audioCtx.destination);
+      } else {
+        sourceNode.connect(audioCtx.destination);
+      }
+      sourceNode.connect(analyserGain);
     } else {
-      sourceNode.connect(analyserNode);
+      sourceNode.connect(audioCtx.destination);
     }
-    analyserNode.connect(audioCtx.destination);
   } catch (e) {
     console.warn('Voice enhance toggle failed:', e);
   }
@@ -1229,8 +1243,9 @@ function setupAudioPlayer() {
     });
   });
 
-  // Voice enhancement toggle
-  var voiceEnhanceEnabled = true;
+  // Voice enhancement toggle — default OFF (prevents Bluetooth stutter)
+  var voiceEnhanceEnabled = false;
+  elements.btnVoiceEnhance.classList.remove('active');
   elements.btnVoiceEnhance.addEventListener('click', function () {
     voiceEnhanceEnabled = !voiceEnhanceEnabled;
     elements.btnVoiceEnhance.classList.toggle('active', voiceEnhanceEnabled);
