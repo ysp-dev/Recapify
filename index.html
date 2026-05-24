@@ -28,7 +28,7 @@
       
       <div class="header-actions">
         <!-- Theme Toggle Button -->
-        <button id="btn-theme-toggle" class="btn btn-secondary btn-icon" title="테마 변경">
+        <button id="btn-theme-toggle" class="btn btn-secondary btn-icon" title="테마 변경" aria-label="테마 변경">
           <i data-lucide="sun" id="theme-toggle-icon"></i>
         </button>
         <!-- Secure API Key Input -->
@@ -36,7 +36,7 @@
           <div id="api-key-wrapper" class="apikey-input-wrapper">
             <i class="apikey-key-icon" data-lucide="key-round"></i>
             <input type="password" id="api-key" class="apikey-input" placeholder="API Key" autocomplete="current-password">
-            <button type="button" id="btn-toggle-api-key" class="apikey-toggle" title="API Key 보이기">
+            <button type="button" id="btn-toggle-api-key" class="apikey-toggle" title="API Key 보이기" aria-label="API Key 보이기">
               <i data-lucide="eye"></i>
             </button>
           </div>
@@ -94,7 +94,7 @@
                 <label for="input-prompt-hint">
                   <i data-lucide="message-square-plus" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i> 전사 힌트
                 </label>
-                <button type="button" id="btn-reset-prompt-hint" class="field-reset-btn" title="전사 힌트 초기화">
+                <button type="button" id="btn-reset-prompt-hint" class="field-reset-btn" title="전사 힌트 초기화" aria-label="전사 힌트 초기화">
                   <i data-lucide="x"></i>
                 </button>
               </div>
@@ -119,8 +119,10 @@
             <div class="upload-zone-hint">MP3, M4A, WAV, OGG, WEBM</div>
           </div>
           <button class="btn btn-secondary btn-sm" style="flex-shrink:0; margin-left:auto;">파일 선택</button>
-          <input type="file" id="file-input" class="hidden" accept="audio/*">
+          <input type="file" id="file-input" class="hidden" accept="audio/*" multiple>
         </div>
+
+        <div id="batch-queue" class="batch-queue hidden"></div>
 
         <!-- 3. Dynamic Custom Audio Player & Wave Visualizer -->
         <div id="audio-player-card" class="audio-player-card hidden">
@@ -132,7 +134,7 @@
                 <div id="file-size" class="file-size">-</div>
               </div>
             </div>
-            <button id="btn-remove-file" class="btn btn-icon btn-remove" title="파일 제거">
+            <button id="btn-remove-file" class="btn btn-icon btn-remove" title="파일 제거" aria-label="파일 제거">
               <i data-lucide="x" style="width: 14px; height: 14px;"></i>
             </button>
           </div>
@@ -176,13 +178,13 @@
               </div>
 
               <div class="main-buttons">
-                <button id="btn-skip-back" class="btn-seek" title="10초 뒤로"><i data-lucide="rotate-ccw"></i></button>
-                <button id="btn-play-pause" class="btn-play-pause" title="재생/일시정지"><i data-lucide="play"></i></button>
-                <button id="btn-skip-forward" class="btn-seek" title="10초 앞으로"><i data-lucide="rotate-cw"></i></button>
+                <button id="btn-skip-back" class="btn-seek" title="10초 뒤로" aria-label="10초 뒤로"><i data-lucide="rotate-ccw"></i></button>
+                <button id="btn-play-pause" class="btn-play-pause" title="재생/일시정지" aria-label="재생"><i data-lucide="play"></i></button>
+                <button id="btn-skip-forward" class="btn-seek" title="10초 앞으로" aria-label="10초 앞으로"><i data-lucide="rotate-cw"></i></button>
               </div>
 
               <div class="volume-control-wrapper">
-                <button id="btn-mute" class="btn-mute" title="음소거"><i data-lucide="volume-2" id="mute-icon"></i></button>
+                <button id="btn-mute" class="btn-mute" title="음소거" aria-label="음소거"><i data-lucide="volume-2" id="mute-icon"></i></button>
                 <input type="range" id="volume-slider" class="range-slider volume-slider" min="0" max="1" step="0.05" value="0.8">
               </div>
             </div>
@@ -193,6 +195,9 @@
         <div class="action-area">
           <button id="btn-transcribe" class="btn btn-primary btn-action-large" disabled>
             <i data-lucide="wand-2"></i> AI 전사 및 요약 시작
+          </button>
+          <button id="btn-cancel-transcribe" class="btn btn-secondary btn-cancel-transcribe hidden">
+            <i data-lucide="circle-stop"></i> 전사 취소
           </button>
           <div id="transcribe-progress" class="transcribe-progress hidden">
             <div class="tp-info">
@@ -216,7 +221,7 @@
               <i data-lucide="file-text"></i> 전사록
             </button>
             <button id="tab-summary" class="tab-btn">
-              <i data-lucide="brain"></i> AI 정리
+              <i data-lucide="brain"></i> AI 정리<span class="tab-attention-dot" aria-hidden="true"></span>
             </button>
             <button id="tab-chat" class="tab-btn">
               <i data-lucide="message-square"></i> Q&A
@@ -239,6 +244,9 @@
                   <i data-lucide="upload" style="width: 12px; height: 12px;"></i> 가져오기
                 </button>
                 <input type="file" id="transcript-file-input" class="hidden" accept=".txt,.md,.srt,.vtt,.json,text/plain,text/markdown,application/json">
+                <button id="btn-generate-chapters" class="btn btn-secondary btn-sm" disabled>
+                  <i data-lucide="list-tree" style="width: 12px; height: 12px;"></i> 챕터 생성
+                </button>
                 <button id="btn-copy-transcript" class="btn btn-secondary btn-sm" disabled>
                   <i data-lucide="copy" style="width: 12px; height: 12px;"></i> 복사
                 </button>
@@ -249,6 +257,7 @@
             </div>
 
             <!-- Active Transcript Container -->
+            <div id="chapters-container" class="chapters-container hidden"></div>
             <div id="transcript-container" class="transcript-timeline scroll-custom">
               <div class="empty-state">
                 <i data-lucide="music-4" class="empty-icon"></i>
@@ -280,6 +289,9 @@
                       <i data-lucide="message-square-text"></i> AI 정리 프롬프트
                     </label>
                     <div class="summary-prompt-actions">
+                      <select id="summary-prompt-history" class="prompt-history-select" title="최근 프롬프트">
+                        <option value="">최근 프롬프트</option>
+                      </select>
                       <button type="button" id="btn-run-summary" class="prompt-run-btn">
                         <i data-lucide="play"></i> 실행
                       </button>
@@ -331,7 +343,7 @@
               <div class="chat-input-sticky-row">
                 <div class="chat-input-wrapper">
                   <input type="text" id="chat-input" placeholder="전사록 내용 질문하기... (예: Action Item이 뭐야?)" disabled>
-                  <button id="btn-send-chat" class="btn-send" disabled title="메시지 전송">
+                  <button id="btn-send-chat" class="btn-send" disabled title="메시지 전송" aria-label="메시지 전송">
                     <i data-lucide="send"></i>
                   </button>
                 </div>
