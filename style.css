@@ -3083,9 +3083,46 @@ body.light-mode .toast {
     min-height: 0;
   }
 
-  .left-panel,
+  /* 모바일: 고정 높이 체인 해제 → 자연 흐름으로 전환 */
+  .right-panel {
+    height: auto;
+  }
+
   .workspace-body-container {
-    min-height: auto;
+    flex-grow: 0;
+    overflow: visible;
+    min-height: 0;
+    height: auto;
+  }
+
+  .pane-content {
+    flex: 0 0 auto;
+    height: auto;
+    overflow: visible;
+    min-height: 480px;
+  }
+
+  .transcript-timeline,
+  .markdown-body,
+  .chat-timeline {
+    overflow-y: visible;
+    flex-grow: 0;
+    min-height: 360px;
+  }
+
+  .chat-workspace {
+    overflow: visible;
+    height: auto;
+  }
+
+  .summary-workspace-grid {
+    height: auto;
+    min-height: 0;
+  }
+
+  .summary-viewer-card {
+    height: auto;
+    overflow: visible;
   }
 }
 
@@ -3171,5 +3208,37 @@ body.light-mode .toast {
 
   .chat-bubble {
     max-width: 94%;
+  }
+
+  /* 버튼 행 줄바꿈 허용 */
+  .export-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* 플레이어 시간 표시 축소 */
+  .time-display {
+    font-size: 10px;
+    min-width: 76px;
+  }
+
+  /* 플레이어 seek 버튼 */
+  .btn-seek-num {
+    width: 30px;
+    height: 30px;
+  }
+
+  .btn-play-circle {
+    width: 38px;
+    height: 38px;
+  }
+
+  .playback-controls {
+    gap: 10px;
+  }
+
+  /* 전사록 카드 패딩 축소 */
+  .transcript-card {
+    padding: 10px;
   }
 }
