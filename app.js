@@ -596,6 +596,8 @@ var state = {
 var audioCtx = null;
 var analyserNode = null;
 var sourceNode = null;
+var filterNode = null;
+var compressorNode = null;
 
 // GPT summary/chat requests are queued to avoid concurrent TPM spikes.
 var openAITextRequestQueue = Promise.resolve();
@@ -1106,11 +1108,46 @@ function initWebAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 256;
+
+    // Voice enhancement nodes (highpass filter + compressor for speech clarity)
+    filterNode = audioCtx.createBiquadFilter();
+    filterNode.type = 'highpass';
+    filterNode.frequency.value = 120;
+
+    compressorNode = audioCtx.createDynamicsCompressor();
+    compressorNode.threshold.value = -28;
+    compressorNode.knee.value = 10;
+    compressorNode.ratio.value = 3;
+    compressorNode.attack.value = 0.003;
+    compressorNode.release.value = 0.2;
+
     sourceNode = audioCtx.createMediaElementSource(elements.mainAudio);
-    sourceNode.connect(analyserNode);
+    // Default: voice enhance ON (sourceNode → filter → compressor → analyser → dest)
+    sourceNode.connect(filterNode);
+    filterNode.connect(compressorNode);
+    compressorNode.connect(analyserNode);
     analyserNode.connect(audioCtx.destination);
   } catch (e) {
     console.warn('Web Audio init failed:', e);
+  }
+}
+
+function applyVoiceEnhancement(enabled) {
+  if (!audioCtx || !sourceNode) return;
+  try {
+    sourceNode.disconnect();
+    filterNode.disconnect();
+    compressorNode.disconnect();
+    if (enabled) {
+      sourceNode.connect(filterNode);
+      filterNode.connect(compressorNode);
+      compressorNode.connect(analyserNode);
+    } else {
+      sourceNode.connect(analyserNode);
+    }
+    analyserNode.connect(audioCtx.destination);
+  } catch (e) {
+    console.warn('Voice enhance toggle failed:', e);
   }
 }
 
@@ -1285,10 +1322,10 @@ function updatePlaybackUI(elapsed, total) {
 }
 
 function formatTime(secs) {
-  if (isNaN(secs)) return '0:00';
+  if (isNaN(secs)) return '00:00';
   var m = Math.floor(secs / 60);
   var s = Math.floor(secs % 60);
-  return m + ':' + (s < 10 ? '0' : '') + s;
+  return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 }
 
 function updateMuteIcon(vol) {
