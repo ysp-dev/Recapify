@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherScribe - AI Audio Transcription Workspace</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="OpenAI 전사 모델과 GPT를 활용한 오디오 전사, 요약, 질의응답 워크스페이스">
+  
+  <!-- CSS Link & Fonts -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Third-party Library CDNs -->
+  <!-- marked.js for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Lucide Icons for premium modern iconography -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Top Header Bar -->
+    <header class="glass-panel">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <i data-lucide="audio-lines"></i>
+        </div>
+        <div class="logo-text">AetherScribe</div>
+      </div>
+      
+      <div class="header-actions">
+        <!-- Theme Toggle Button -->
+        <button id="btn-theme-toggle" class="btn btn-secondary btn-icon" style="border-radius: 50%; width: 34px; height: 34px;" title="테마 변경">
+          <i data-lucide="sun" id="theme-toggle-icon"></i>
+        </button>
+        <!-- Secure API Key Input -->
+        <div class="apikey-container">
+          <div id="api-key-wrapper" class="apikey-input-wrapper">
+            <i data-lucide="key-round"></i>
+            <input type="password" id="api-key" class="apikey-input" placeholder="OpenAI API Key (sk-...)" autocomplete="current-password">
+            <i class="lock-icon" data-lucide="lock" style="width:14px; height:14px; margin-left:6px;" title="저장됨"></i>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Layout Grid -->
+    <main class="main-grid">
+      
+      <!-- LEFT COLUMN: AUDIO HUB & CONTROLS -->
+      <section class="left-panel glass-panel">
+        <div class="panel-section-title">
+          <i data-lucide="sliders"></i> 설정 및 오디오 파일 로드
+        </div>
+
+        <!-- 1. API Configurations -->
+        <div class="settings-box">
+          <div class="settings-grid">
+            <!-- Model Selection -->
+            <div class="form-group">
+              <label for="select-model">GPT 모델 (요약·Q&A)</label>
+              <select id="select-model" class="select-custom">
+                <option value="gpt-4.1" selected>GPT-4.1 (권장)</option>
+                <option value="gpt-4.1-mini">GPT-4.1 mini (빠름·저비용)</option>
+                <option value="gpt-4.1-nano">GPT-4.1 nano (최저비용)</option>
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="gpt-4o-mini">GPT-4o mini</option>
+              </select>
+            </div>
+
+            <!-- Transcription Model Selection -->
+            <div class="form-group">
+              <label for="select-transcribe-model">전사 모델 (STT)</label>
+              <select id="select-transcribe-model" class="select-custom">
+                <option value="gpt-4o-transcribe" selected>GPT-4o Transcribe (권장)</option>
+                <option value="gpt-4o-mini-transcribe">GPT-4o mini Transcribe (빠름)</option>
+                <option value="whisper-1">Whisper-1 (구버전)</option>
+              </select>
+            </div>
+
+            <!-- Language Prebuilt Choices -->
+            <div class="form-group">
+              <label for="select-lang">오디오 언어</label>
+              <select id="select-lang" class="select-custom">
+                <option value="ko" selected>한국어 (Korean)</option>
+                <option value="en">영어 (English)</option>
+                <option value="ja">일본어 (Japanese)</option>
+                <option value="auto">자동 감지 (Auto-Detect)</option>
+              </select>
+            </div>
+
+            <!-- Transcription Prompt -->
+            <div class="form-group style-hint-wrapper">
+              <label for="input-prompt-hint">
+                <i data-lucide="message-square-plus" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i> 전사 프롬프트
+              </label>
+              <textarea id="input-prompt-hint" class="input-custom" rows="6" placeholder="전사 지침, 화자 이름, 전문 용어 입력" style="resize:vertical; font-size:11.5px; line-height:1.6;"></textarea>
+              <div class="prompt-presets">
+                <span class="preset-badge" data-preset="GPT-4o, Whisper, OpenAI, API, SDK, React, TypeScript, Figma, Product Hunt">IT 스타트업</span>
+                <span class="preset-badge" data-preset="회의록, 액션아이템, 마일스톤, KPI, OKR, 스프린트, 로드맵">비즈니스</span>
+                <span class="preset-badge" data-preset="딥러닝, 머신러닝, 파인튜닝, 임베딩, 토큰, LLM, RAG, 프롬프트">AI·데이터</span>
+                <span class="preset-badge" data-preset="추임새(음, 어, 아, 저 등)와 불필요한 반복 단어는 삭제하고 깔끔한 문장으로 정리해줘">추임새 생략</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Audio File Upload Area -->
+        <div id="upload-zone" class="upload-zone">
+          <div class="upload-icon-sm">
+            <i data-lucide="cloud-upload" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div class="upload-zone-text">
+            <div class="upload-zone-title">오디오 파일</div>
+            <div class="upload-zone-hint">MP3, M4A, WAV, OGG, WEBM</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" style="flex-shrink:0; margin-left:auto;">파일 선택</button>
+          <input type="file" id="file-input" class="hidden" accept="audio/*">
+        </div>
+
+        <!-- 3. Dynamic Custom Audio Player & Wave Visualizer -->
+        <div id="audio-player-card" class="audio-player-card hidden">
+          <div class="card-header">
+            <div class="file-details">
+              <i data-lucide="music" style="color: var(--secondary);"></i>
+              <div class="file-info-text">
+                <div id="file-name" class="file-name">aetherscribe_project_kickoff.mp3</div>
+                <div id="file-size" class="file-size">2.8 MB</div>
+              </div>
+            </div>
+            <button id="btn-remove-file" class="btn btn-icon btn-remove" title="파일 제거">
+              <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+            </button>
+          </div>
+
+          <!-- Real-time dynamic visualizer inside player card -->
+          <div class="visualizer-wrapper">
+            <div class="visualizer-header">
+              <div id="status-badge" class="status-badge idle">
+                <div class="indicator-dot"></div>
+                <span id="status-text">대기 중</span>
+              </div>
+            </div>
+            <canvas id="visualizer-canvas" class="visualizer-canvas"></canvas>
+          </div>
+
+          <!-- Native Audio tag (Hidden, wired in JavaScript) -->
+          <audio id="main-audio" class="hidden"></audio>
+
+          <!-- Custom Premium Player Controls -->
+          <div class="player-controls-container">
+            <div class="progress-track-wrapper">
+              <input type="range" id="progress-bar" class="range-slider" min="0" max="100" value="0">
+              <div class="time-labels">
+                <span id="time-elapsed">0:00</span>
+                <span id="time-total">0:00</span>
+              </div>
+            </div>
+
+            <!-- Tactile Dashboard Playback Buttons -->
+            <div class="controls-row">
+              <div class="speed-control-wrapper">
+                <i data-lucide="gauge" style="width: 12px; height: 12px; color: var(--text-muted);"></i>
+                <select id="speed-select" class="speed-select">
+                  <option value="0.5">0.5x</option>
+                  <option value="0.75">0.75x</option>
+                  <option value="1.0" selected>1.0x</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2.0">2.0x</option>
+                </select>
+              </div>
+
+              <div class="main-buttons">
+                <button id="btn-skip-back" class="btn-seek" title="10초 뒤로"><i data-lucide="rotate-ccw"></i></button>
+                <button id="btn-play-pause" class="btn-play-pause" title="재생/일시정지"><i data-lucide="play"></i></button>
+                <button id="btn-skip-forward" class="btn-seek" title="10초 앞으로"><i data-lucide="rotate-cw"></i></button>
+              </div>
+
+              <div class="volume-control-wrapper">
+                <button id="btn-mute" class="btn-mute" title="음소거"><i data-lucide="volume-2" id="mute-icon"></i></button>
+                <input type="range" id="volume-slider" class="range-slider volume-slider" min="0" max="1" step="0.05" value="0.8">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Action Trigger Button + Progress -->
+        <div class="action-area">
+          <button id="btn-transcribe" class="btn btn-primary btn-action-large" disabled>
+            <i data-lucide="wand-2"></i> AI 전사 및 요약 시작
+          </button>
+          <div id="transcribe-progress" class="transcribe-progress hidden">
+            <div class="tp-info">
+              <span id="tp-label">전사 중...</span>
+              <span id="tp-pct"></span>
+            </div>
+            <div class="tp-track">
+              <div id="tp-fill" class="tp-fill"></div>
+            </div>
+          </div>
+        </div><!-- /.action-area -->
+      </section>
+
+      <!-- RIGHT COLUMN: INTERACTIVE WORKSPACE HUB -->
+      <section class="right-panel">
+        
+        <!-- Tab Switch Header (Glassmorphic) -->
+        <div class="tabs-nav-wrapper glass-panel">
+          <div class="tab-buttons">
+            <button id="tab-transcript" class="tab-btn active">
+              <i data-lucide="file-text"></i> 전사록
+            </button>
+            <button id="tab-summary" class="tab-btn">
+              <i data-lucide="brain"></i> AI 정리
+            </button>
+            <button id="tab-chat" class="tab-btn">
+              <i data-lucide="message-square"></i> Q&A
+            </button>
+          </div>
+        </div>
+
+        <!-- Workspace Tabs Content Panel -->
+        <div class="workspace-body-container glass-panel">
+          
+          <!-- ==================== TAB 1: TRANSCRIPT ==================== -->
+          <div id="pane-transcript" class="pane-content active">
+            <div class="pane-header-actions">
+              <div class="search-input-wrapper">
+                <i data-lucide="search" style="width: 14px; height: 14px;"></i>
+                <input type="text" id="transcript-search" placeholder="전사록 단어 검색..." disabled>
+              </div>
+              <div class="export-actions">
+                <button id="btn-copy-transcript" class="btn btn-secondary btn-sm" disabled>
+                  <i data-lucide="copy" style="width: 12px; height: 12px;"></i> 복사
+                </button>
+                <button id="btn-download-transcript" class="btn btn-secondary btn-sm" disabled>
+                  <i data-lucide="download" style="width: 12px; height: 12px;"></i> 다운로드
+                </button>
+              </div>
+            </div>
+
+            <!-- Active Transcript Container -->
+            <div id="transcript-container" class="transcript-timeline scroll-custom">
+              <div class="empty-state">
+                <i data-lucide="music-4" class="empty-icon"></i>
+                <h3>전사록 없음</h3>
+                <p>오디오가 준비되면 전사 결과가 표시됩니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== TAB 2: SUMMARY HUB ==================== -->
+          <div id="pane-summary" class="pane-content">
+            <div class="summary-workspace-grid">
+              
+              <!-- Left Mini Sidebar: 5 Format Choices -->
+              <aside class="summary-menu-sidebar">
+                <button class="summary-format-btn active" data-format="summary">
+                  <i data-lucide="align-left"></i> 핵심 요약
+                </button>
+                <button class="summary-format-btn" data-format="minutes">
+                  <i data-lucide="clipboard-list"></i> 회의록 & Action Items
+                </button>
+                <button class="summary-format-btn" data-format="notes">
+                  <i data-lucide="network"></i> 구조화 노트 (마인드맵)
+                </button>
+                <button class="summary-format-btn" data-format="qa">
+                  <i data-lucide="help-circle"></i> 주요 Q&A
+                </button>
+                <button class="summary-format-btn" data-format="email">
+                  <i data-lucide="mail"></i> 이메일 보고서 초안
+                </button>
+              </aside>
+
+              <!-- Right Detail Panel: Formatted Markdown Summary Content -->
+              <div class="summary-viewer-card">
+                <div class="viewer-actions-row">
+                  <span id="summary-badge" class="badge-accent">OpenAI GPT 분석</span>
+                  <div class="export-actions">
+                    <button id="btn-copy-summary" class="btn btn-secondary btn-sm" disabled>
+                      <i data-lucide="copy" style="width: 12px; height: 12px;"></i> 복사
+                    </button>
+                    <button id="btn-download-summary" class="btn btn-secondary btn-sm" disabled>
+                      <i data-lucide="download" style="width: 12px; height: 12px;"></i> 다운로드 (.md)
+                    </button>
+                  </div>
+                </div>
+
+                <div id="summary-content" class="markdown-body scroll-custom">
+                  <div class="empty-state">
+                    <i data-lucide="sparkles" class="empty-icon text-accent"></i>
+                    <h3>요약 없음</h3>
+                    <p>전사 완료 후 선택한 형식의 리포트가 표시됩니다.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ==================== TAB 3: CHAT Q&A ==================== -->
+          <div id="pane-chat" class="pane-content">
+            <div class="chat-workspace">
+              <!-- Chat Timeline Message list -->
+              <div id="chat-messages-container" class="chat-timeline scroll-custom">
+                <div class="chat-system-message">
+                  <div class="system-icon"><i data-lucide="bot"></i></div>
+                  <div class="system-text">
+                    <strong>AetherScribe AI 오디오 어시스턴트</strong>
+                    <p>전사록 범위 안에서 답변합니다.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sticky Chat Input Container -->
+              <div class="chat-input-sticky-row">
+                <div class="chat-input-wrapper">
+                  <input type="text" id="chat-input" placeholder="전사록 내용 질문하기... (예: Action Item이 뭐야?)" disabled>
+                  <button id="btn-send-chat" class="btn-send" disabled title="메시지 전송">
+                    <i data-lucide="send"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Notification Popup Toast -->
+  <div id="toast" class="toast hidden">
+    <i data-lucide="check-circle" style="color: var(--secondary); width:18px; height:18px;"></i>
+    <span id="toast-text">내용이 클립보드에 복사되었습니다!</span>
+  </div>
+
+  <!-- Script Modules -->
+  <script src="app.js"></script>
+</body>
+</html>
