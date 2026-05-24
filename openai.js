@@ -1,8 +1,8 @@
 /**
  * ==========================================================================
  * OpenAI API Integration Module
- * - Transcription: Whisper API (whisper-1)
- * - Summary & Chat: GPT Chat Completions
+ * - Transcription: GPT-4o Transcribe, GPT-4o mini Transcribe, Whisper fallback
+ * - Summary & Chat: GPT-5.5 via Responses API, GPT-4.1 fallback via Chat Completions
  * ==========================================================================
  */
 
@@ -88,26 +88,32 @@ const SUMMARY_SYSTEM_PROMPTS = {
 };
 
 /**
- * Transcribe audio file using OpenAI Whisper API
+ * Transcribe audio file using OpenAI speech-to-text models
  * @param {File} audioFile - The audio File object
  * @param {string} language - Language code (e.g., 'ko', 'en') or 'auto'
  * @param {string} promptHint - Optional transcription hint/vocabulary
  * @param {string} apiKey - OpenAI API key
+ * @param {string} transcribeModel - Speech-to-text model ID
  * @returns {Promise<{text: string, segments: Array}>}
  */
-export async function transcribeAudio(audioFile, language, promptHint, apiKey) {
+export async function transcribeAudio(audioFile, language, promptHint, apiKey, transcribeModel = 'gpt-4o-transcribe') {
+  const isLegacy = transcribeModel === 'whisper-1';
   const formData = new FormData();
   formData.append('file', audioFile, audioFile.name);
-  formData.append('model', 'whisper-1');
-  formData.append('response_format', 'verbose_json');
-  formData.append('timestamp_granularities[]', 'segment');
+  formData.append('model', transcribeModel);
+  formData.append('response_format', isLegacy ? 'verbose_json' : 'json');
+
+  if (isLegacy) {
+    formData.append('timestamp_granularities[]', 'segment');
+  } else {
+    formData.append('chunking_strategy', 'auto');
+  }
 
   if (language && language !== 'auto') {
     formData.append('language', language);
   }
 
   if (promptHint && promptHint.trim()) {
-    // Whisper prompt is used as vocabulary/context hint (max ~200 tokens)
     formData.append('prompt', promptHint.trim());
   }
 
@@ -121,22 +127,57 @@ export async function transcribeAudio(audioFile, language, promptHint, apiKey) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || `Whisper API 오류: ${response.status} ${response.statusText}`);
+    throw new Error(errorData.error?.message || `전사 API 오류: ${response.status} ${response.statusText}`);
   }
 
-  return await response.json();
+  const data = await response.json();
+  if (isLegacy) return data;
+
+  const text = data.text || '';
+  const parts = text.match(/[^.!?。\n]+[.!?。\n]*/g) || (text ? [text] : []);
+  return {
+    text,
+    segments: parts.map((part) => ({ start: null, text: part.trim() })).filter((part) => part.text.length > 0)
+  };
 }
 
 /**
- * Generate structured summary using GPT Chat Completions
+ * Generate structured summary using OpenAI text generation models
  * @param {string} transcriptText - Full transcript text
  * @param {string} format - Summary format key (summary/minutes/notes/qa/email)
  * @param {string} apiKey - OpenAI API key
- * @param {string} model - GPT model ID (e.g., 'gpt-4o')
+ * @param {string} model - GPT model ID (e.g., 'gpt-5.5')
  * @returns {Promise<string>} Markdown-formatted summary
  */
-export async function generateSummary(transcriptText, format, apiKey, model) {
+export async function generateSummary(transcriptText, format, apiKey, model = 'gpt-5.5') {
   const systemPrompt = SUMMARY_SYSTEM_PROMPTS[format] || SUMMARY_SYSTEM_PROMPTS.summary;
+
+  if (isResponsesModel(model)) {
+    const response = await fetch(`${OPENAI_API_BASE}/responses`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        instructions: systemPrompt,
+        input: `다음 오디오 전사록을 분석하여 요청한 형식으로 정리해 주세요:\n\n---\n${transcriptText}\n---`,
+        reasoning: { effort: 'low' },
+        text: { verbosity: 'low' },
+        max_output_tokens: 2500,
+        store: false
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `GPT API 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return extractOpenAIResponseText(data);
+  }
 
   const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
     method: 'POST',
@@ -145,7 +186,7 @@ export async function generateSummary(transcriptText, format, apiKey, model) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: model,
+      model,
       messages: [
         { role: 'system', content: systemPrompt },
         {
@@ -168,7 +209,7 @@ export async function generateSummary(transcriptText, format, apiKey, model) {
 }
 
 /**
- * Answer questions about the transcript using GPT Chat Completions
+ * Answer questions about the transcript using OpenAI text generation models
  * @param {string} transcriptText - Full transcript text
  * @param {string} userQuery - User's question
  * @param {Array} chatHistory - Chat history [{role, text}]
@@ -176,27 +217,60 @@ export async function generateSummary(transcriptText, format, apiKey, model) {
  * @param {string} model - GPT model ID
  * @returns {Promise<string>} AI response
  */
-export async function askChatAboutTranscript(transcriptText, userQuery, chatHistory, apiKey, model) {
-  const messages = [
-    {
-      role: 'system',
-      content: `당신은 전문 오디오 콘텐츠 어시스턴트입니다. 아래 오디오 전사록을 완전히 이해하고 있으며, 사용자의 질문에 전사록 내용을 기반으로 정확하고 친절하게 답변합니다. 전사록에 없는 내용은 추측하지 마세요.
+export async function askChatAboutTranscript(transcriptText, userQuery, chatHistory, apiKey, model = 'gpt-5.5') {
+  const instructions = `당신은 전문 오디오 콘텐츠 어시스턴트입니다. 아래 오디오 전사록을 완전히 이해하고 있으며, 사용자의 질문에 전사록 내용을 기반으로 정확하고 친절하게 답변합니다. 전사록에 없는 내용은 추측하지 마세요.
 
 [오디오 전사록]
 ---
 ${transcriptText}
----`
+---`;
+
+  const messages = [
+    {
+      role: 'system',
+      content: instructions
     }
   ];
+  const responseInput = [];
 
   for (const msg of chatHistory) {
-    messages.push({
+    const message = {
       role: msg.role === 'model' ? 'assistant' : 'user',
       content: msg.text
-    });
+    };
+    messages.push(message);
+    responseInput.push(message);
   }
 
   messages.push({ role: 'user', content: userQuery });
+  responseInput.push({ role: 'user', content: userQuery });
+
+  if (isResponsesModel(model)) {
+    const response = await fetch(`${OPENAI_API_BASE}/responses`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model,
+        instructions,
+        input: responseInput,
+        reasoning: { effort: 'low' },
+        text: { verbosity: 'low' },
+        max_output_tokens: 1200,
+        store: false
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `GPT API 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return extractOpenAIResponseText(data);
+  }
 
   const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
     method: 'POST',
@@ -205,7 +279,7 @@ ${transcriptText}
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: model,
+      model,
       messages: messages,
       temperature: 0.7,
       max_tokens: 1200
@@ -219,4 +293,31 @@ ${transcriptText}
 
   const data = await response.json();
   return data.choices[0]?.message?.content || '';
+}
+
+function isResponsesModel(model) {
+  return /^gpt-5(\.|-|$)/.test(model || '');
+}
+
+function extractOpenAIResponseText(data) {
+  if (!data) return '';
+  if (typeof data.output_text === 'string') return data.output_text;
+
+  const parts = [];
+  if (Array.isArray(data.output)) {
+    for (const item of data.output) {
+      if (typeof item.text === 'string') parts.push(item.text);
+      if (Array.isArray(item.content)) {
+        for (const contentPart of item.content) {
+          if (typeof contentPart.text === 'string') {
+            parts.push(contentPart.text);
+          } else if (typeof contentPart.content === 'string') {
+            parts.push(contentPart.content);
+          }
+        }
+      }
+    }
+  }
+
+  return parts.join('').trim();
 }

@@ -1,6 +1,6 @@
 /* ==========================================================================
-   AetherScribe - Main Application Script
-   OpenAI GPT-4o-transcribe + GPT-4.1 | file:// compatible (no ES modules)
+   Recapify - Main Application Script
+   OpenAI GPT-4o-transcribe + GPT-5.5 | file:// compatible (no ES modules)
    ========================================================================== */
 
 const OPENAI_API_BASE = 'https://api.openai.com/v1';
@@ -298,6 +298,24 @@ function wavWriteString(view, offset, str) {
 async function generateSummary(transcriptText, format, apiKey, model) {
   var systemPrompt = SUMMARY_SYSTEM_PROMPTS[format] || SUMMARY_SYSTEM_PROMPTS.summary;
   return enqueueOpenAITextRequest(async function () {
+    if (isResponsesModel(model)) {
+      var responseData = await fetchOpenAIJsonWithRetry(OPENAI_API_BASE + '/responses', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: model,
+          instructions: systemPrompt,
+          input: '다음 오디오 전사록을 분석하여 요청한 형식으로 정리해 주세요:\n\n---\n' + transcriptText + '\n---',
+          reasoning: { effort: 'low' },
+          text: { verbosity: 'low' },
+          max_output_tokens: SUMMARY_MAX_TOKENS[format] || 2000,
+          store: false
+        })
+      }, '요약 생성');
+
+      return extractOpenAIResponseText(responseData);
+    }
+
     var data = await fetchOpenAIJsonWithRetry(OPENAI_API_BASE + '/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
@@ -317,18 +335,37 @@ async function generateSummary(transcriptText, format, apiKey, model) {
 }
 
 async function askChatAboutTranscript(transcriptText, userQuery, chatHistory, apiKey, model) {
-  var messages = [{
-    role: 'system',
-    content: '당신은 전문 오디오 콘텐츠 어시스턴트입니다. 아래 오디오 전사록을 완전히 이해하고 있으며, 사용자의 질문에 전사록 내용을 기반으로 정확하고 친절하게 답변합니다. 전사록에 없는 내용은 추측하지 마세요.\n\n[오디오 전사록]\n---\n' + transcriptText + '\n---'
-  }];
+  var instructions = '당신은 전문 오디오 콘텐츠 어시스턴트입니다. 아래 오디오 전사록을 완전히 이해하고 있으며, 사용자의 질문에 전사록 내용을 기반으로 정확하고 친절하게 답변합니다. 전사록에 없는 내용은 추측하지 마세요.\n\n[오디오 전사록]\n---\n' + transcriptText + '\n---';
+  var messages = [{ role: 'system', content: instructions }];
+  var responseInput = [];
 
   for (var i = 0; i < chatHistory.length; i++) {
     var msg = chatHistory[i];
     messages.push({ role: msg.role === 'model' ? 'assistant' : 'user', content: msg.text });
+    responseInput.push({ role: msg.role === 'model' ? 'assistant' : 'user', content: msg.text });
   }
   messages.push({ role: 'user', content: userQuery });
+  responseInput.push({ role: 'user', content: userQuery });
 
   return enqueueOpenAITextRequest(async function () {
+    if (isResponsesModel(model)) {
+      var responseData = await fetchOpenAIJsonWithRetry(OPENAI_API_BASE + '/responses', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: model,
+          instructions: instructions,
+          input: responseInput,
+          reasoning: { effort: 'low' },
+          text: { verbosity: 'low' },
+          max_output_tokens: 1200,
+          store: false
+        })
+      }, 'Q&A 답변');
+
+      return extractOpenAIResponseText(responseData);
+    }
+
     var data = await fetchOpenAIJsonWithRetry(OPENAI_API_BASE + '/chat/completions', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
@@ -337,6 +374,35 @@ async function askChatAboutTranscript(transcriptText, userQuery, chatHistory, ap
 
     return (data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
   });
+}
+
+function isResponsesModel(model) {
+  return /^gpt-5(\.|-|$)/.test(model || '');
+}
+
+function extractOpenAIResponseText(data) {
+  if (!data) return '';
+  if (typeof data.output_text === 'string') return data.output_text;
+
+  var parts = [];
+  if (Array.isArray(data.output)) {
+    data.output.forEach(function (item) {
+      if (typeof item.text === 'string') {
+        parts.push(item.text);
+      }
+      if (Array.isArray(item.content)) {
+        item.content.forEach(function (contentPart) {
+          if (typeof contentPart.text === 'string') {
+            parts.push(contentPart.text);
+          } else if (typeof contentPart.content === 'string') {
+            parts.push(contentPart.content);
+          }
+        });
+      }
+    });
+  }
+
+  return parts.join('').trim();
 }
 
 async function fetchOpenAIJsonWithRetry(url, options, label) {
@@ -409,7 +475,7 @@ function enqueueOpenAITextRequest(task) {
 
 var state = {
   apiKey: '',
-  model: 'gpt-4.1',
+  model: 'gpt-5.5',
   transcribeModel: 'gpt-4o-transcribe',
   language: 'ko',
   promptHint: '',
@@ -675,7 +741,7 @@ function resetWorkspaceData() {
 
   elements.transcriptContainer.innerHTML = '<div class="empty-state"><i data-lucide="music-4" class="empty-icon"></i><h3>전사록 없음</h3><p>오디오가 준비되면 전사 결과가 표시됩니다.</p></div>';
   elements.summaryContent.innerHTML = '<div class="empty-state"><i data-lucide="sparkles" class="empty-icon text-accent"></i><h3>요약 없음</h3><p>전사 완료 후 선택한 형식의 리포트가 표시됩니다.</p></div>';
-  elements.chatMessagesContainer.innerHTML = '<div class="chat-system-message"><div class="system-icon"><i data-lucide="bot"></i></div><div class="system-text"><strong>AetherScribe AI 오디오 어시스턴트</strong><p>전사록 범위 안에서 답변합니다.</p></div></div>';
+  elements.chatMessagesContainer.innerHTML = '<div class="chat-system-message"><div class="system-icon"><i data-lucide="bot"></i></div><div class="system-text"><strong>Recapify AI 오디오 어시스턴트</strong><p>전사록 범위 안에서 답변합니다.</p></div></div>';
 
   elements.transcriptSearch.value = '';
   elements.transcriptSearch.disabled = true;
@@ -920,7 +986,7 @@ function hideTranscribeProgress() {
 
 async function triggerTranscribeAI() {
   if (!state.promptHint || !state.promptHint.trim()) {
-    elements.transcriptContainer.innerHTML = '<div class="empty-state"><i data-lucide="alert-triangle" class="empty-icon" style="color:#f59e0b;"></i><h3>전사 프롬프트를 입력해 주세요</h3><p>왼쪽 패널의 <strong>전사 프롬프트</strong> 항목에 전문 용어, 화자 이름 또는 전사 지침을 입력한 후 다시 시도해 주세요.</p></div>';
+    elements.transcriptContainer.innerHTML = '<div class="empty-state"><i data-lucide="alert-triangle" class="empty-icon" style="color:#f59e0b;"></i><h3>전사 프롬프트를 입력해 주세요</h3><p>왼쪽 패널의 <strong>전사 프롬프트</strong> 항목에 전문 용어 또는 전사 지침을 입력한 후 다시 시도해 주세요.</p></div>';
     if (window.lucide) window.lucide.createIcons();
     showToast('전사 프롬프트를 먼저 입력해 주세요.');
     return;
@@ -982,14 +1048,15 @@ function parseWhisperSegments(segments) {
       id: idx,
       time: hasTime ? String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0') : null,
       seconds: hasTime ? Math.floor(start) : -1,
-      speaker: '화자',
       text: (seg.text || '').trim()
     };
   }).filter(function (p) { return p.text.length > 0; });
 }
 
 function buildTranscriptText(paragraphs) {
-  return paragraphs.map(function (p) { return '[' + p.time + '] ' + p.speaker + ': ' + p.text; }).join('\n');
+  return paragraphs.map(function (p) {
+    return (p.time ? '[' + p.time + '] ' : '') + p.text;
+  }).join('\n');
 }
 
 function renderTranscriptTimeline(filterWord) {
@@ -997,7 +1064,7 @@ function renderTranscriptTimeline(filterWord) {
   elements.transcriptContainer.innerHTML = '';
   var query = filterWord.toLowerCase().trim();
   var filtered = state.transcriptParagraphs.filter(function (p) {
-    return p.text.toLowerCase().includes(query) || p.speaker.toLowerCase().includes(query);
+    return p.text.toLowerCase().includes(query);
   });
 
   if (filtered.length === 0) {
@@ -1013,15 +1080,14 @@ function renderTranscriptTimeline(filterWord) {
     card.setAttribute('data-seconds', p.seconds);
 
     var textHTML = p.text;
-    var speakerHTML = p.speaker;
     if (query) {
       var regex = new RegExp('(' + escapeRegExp(filterWord) + ')', 'gi');
       textHTML = p.text.replace(regex, '<span class="search-highlight">$1</span>');
-      speakerHTML = p.speaker.replace(regex, '<span class="search-highlight">$1</span>');
     }
 
     var timeHtml = p.time ? '<span class="timestamp-badge">' + p.time + '</span>' : '';
-    card.innerHTML = '<div class="card-metadata">' + timeHtml + '<span class="speaker-label">' + speakerHTML + '</span></div><div class="speech-text">' + textHTML + '</div>';
+    var metadataHtml = timeHtml ? '<div class="card-metadata">' + timeHtml + '</div>' : '';
+    card.innerHTML = metadataHtml + '<div class="speech-text">' + textHTML + '</div>';
     card.addEventListener('click', function () { seekAudioToSeconds(p.seconds); });
     elements.transcriptContainer.appendChild(card);
   });

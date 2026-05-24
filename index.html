@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AetherScribe - AI Audio Transcription Workspace</title>
+  <title>Recapify - AI Audio Transcription Workspace</title>
   <!-- SEO Meta Tags -->
   <meta name="description" content="OpenAI 전사 모델과 GPT를 활용한 오디오 전사, 요약, 질의응답 워크스페이스">
   
@@ -25,7 +25,7 @@
         <div class="logo-icon">
           <i data-lucide="audio-lines"></i>
         </div>
-        <div class="logo-text">AetherScribe</div>
+        <div class="logo-text">Recapify</div>
       </div>
       
       <div class="header-actions">
@@ -60,11 +60,10 @@
             <div class="form-group">
               <label for="select-model">GPT 모델 (요약·Q&A)</label>
               <select id="select-model" class="select-custom">
-                <option value="gpt-4.1" selected>GPT-4.1 (권장)</option>
+                <option value="gpt-5.5" selected>GPT-5.5 (권장)</option>
+                <option value="gpt-4.1">GPT-4.1 (안정)</option>
                 <option value="gpt-4.1-mini">GPT-4.1 mini (빠름·저비용)</option>
                 <option value="gpt-4.1-nano">GPT-4.1 nano (최저비용)</option>
-                <option value="gpt-4o">GPT-4o</option>
-                <option value="gpt-4o-mini">GPT-4o mini</option>
               </select>
             </div>
 
@@ -94,9 +93,9 @@
               <label for="input-prompt-hint">
                 <i data-lucide="message-square-plus" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i> 전사 프롬프트
               </label>
-              <textarea id="input-prompt-hint" class="input-custom" rows="6" placeholder="전사 지침, 화자 이름, 전문 용어 입력" style="resize:vertical; font-size:11.5px; line-height:1.6;"></textarea>
+              <textarea id="input-prompt-hint" class="input-custom" rows="6" placeholder="전사 지침 또는 전문 용어 입력" style="resize:vertical; font-size:11.5px; line-height:1.6;"></textarea>
               <div class="prompt-presets">
-                <span class="preset-badge" data-preset="GPT-4o, Whisper, OpenAI, API, SDK, React, TypeScript, Figma, Product Hunt">IT 스타트업</span>
+                <span class="preset-badge" data-preset="OpenAI, API, SDK, React, TypeScript, 릴리즈, 백로그, 배포">IT 스타트업</span>
                 <span class="preset-badge" data-preset="회의록, 액션아이템, 마일스톤, KPI, OKR, 스프린트, 로드맵">비즈니스</span>
                 <span class="preset-badge" data-preset="딥러닝, 머신러닝, 파인튜닝, 임베딩, 토큰, LLM, RAG, 프롬프트">AI·데이터</span>
                 <span class="preset-badge" data-preset="추임새(음, 어, 아, 저 등)와 불필요한 반복 단어는 삭제하고 깔끔한 문장으로 정리해줘">추임새 생략</span>
@@ -124,8 +123,8 @@
             <div class="file-details">
               <i data-lucide="music" style="color: var(--secondary);"></i>
               <div class="file-info-text">
-                <div id="file-name" class="file-name">aetherscribe_project_kickoff.mp3</div>
-                <div id="file-size" class="file-size">2.8 MB</div>
+                <div id="file-name" class="file-name">선택된 파일 없음</div>
+                <div id="file-size" class="file-size">-</div>
               </div>
             </div>
             <button id="btn-remove-file" class="btn btn-icon btn-remove" title="파일 제거">
@@ -307,7 +306,7 @@
                 <div class="chat-system-message">
                   <div class="system-icon"><i data-lucide="bot"></i></div>
                   <div class="system-text">
-                    <strong>AetherScribe AI 오디오 어시스턴트</strong>
+                    <strong>Recapify AI 오디오 어시스턴트</strong>
                     <p>전사록 범위 안에서 답변합니다.</p>
                   </div>
                 </div>

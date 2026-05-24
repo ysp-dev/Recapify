@@ -1,5 +1,5 @@
 /* ==========================================================================
-   AetherScribe - Premium Dark Space Glassmorphism Stylesheet
+   Recapify - Premium Dark Space Glassmorphism Stylesheet
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
@@ -110,7 +110,7 @@ body {
 }
 
 /* ==========================================================================
-   AetherScribe - Prompt Presets & Light Mode Override Rules
+   Recapify - Prompt Presets & Light Mode Override Rules
    ========================================================================== */
 
 /* Prompt Presets badges */
@@ -363,8 +363,10 @@ header {
   animation: logo-shape 6s infinite ease-in-out alternate;
 }
 
-.logo-icon i {
+.logo-icon i,
+.logo-icon svg {
   color: white;
+  stroke: currentColor;
   font-size: 18px;
 }
 
@@ -1145,12 +1147,6 @@ header {
   box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
 }
 
-.speaker-label {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
 .speech-text {
   font-size: 13px;
   line-height: 1.6;
@@ -1715,6 +1711,7 @@ body.light-mode {
     linear-gradient(180deg, rgba(var(--primary-rgb), 0.05), transparent 320px),
     linear-gradient(90deg, rgba(var(--secondary-rgb), 0.035), transparent 42%);
   line-height: 1.45;
+  display: block;
 }
 
 html,
@@ -1764,6 +1761,20 @@ header {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   box-shadow: none;
   animation: none;
+}
+
+body.light-mode .logo-icon {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(242, 247, 255, 0.86)),
+    linear-gradient(135deg, rgba(var(--primary-rgb), 0.1), rgba(var(--secondary-rgb), 0.08));
+  border: 1px solid rgba(var(--primary-rgb), 0.14);
+  box-shadow: 0 8px 20px rgba(36, 43, 55, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+body.light-mode .logo-icon i,
+body.light-mode .logo-icon svg {
+  color: var(--primary);
+  stroke: currentColor;
 }
 
 .logo-text {
@@ -2250,10 +2261,6 @@ body.light-mode .transcript-card.active-playback {
   box-shadow: none;
 }
 
-.speaker-label {
-  font-size: 12px;
-}
-
 .speech-text {
   font-size: 13px;
   line-height: 1.65;
@@ -2491,7 +2498,10 @@ body.light-mode .toast {
 
 @media (max-width: 760px) {
   .app-container {
-    padding: 10px;
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    margin: 10px;
+    padding: 0;
   }
 
   .left-panel,
