@@ -56,17 +56,7 @@ const SUMMARY_SYSTEM_PROMPTS = {
    OpenAI API Functions
    ========================================================================== */
 
-function stripPromptEcho(text, prompt) {
-  if (!text || !prompt) return text;
-  var hint = prompt.trim();
-  if (!hint) return text;
-  if (text.startsWith(hint)) {
-    return text.slice(hint.length).replace(/^[\s,.\n。！？!?]+/, '');
-  }
-  return text;
-}
-
-async function transcribeAudio(audioFile, language, promptHint, apiKey, transcribeModel, signal) {
+async function transcribeAudio(audioFile, language, apiKey, transcribeModel, signal, chunkContext) {
   var model = transcribeModel || 'gpt-4o-transcribe';
   var isLegacy = (model === 'whisper-1');
 
@@ -77,15 +67,16 @@ async function transcribeAudio(audioFile, language, promptHint, apiKey, transcri
   formData.append('response_format', isLegacy ? 'verbose_json' : 'json');
   if (isLegacy) {
     formData.append('timestamp_granularities[]', 'segment');
+    // 청크 간 문맥 연속성 (사용자 힌트 아님 — 이전 청크 마지막 30단어)
+    if (chunkContext && chunkContext.trim()) {
+      formData.append('prompt', chunkContext.trim());
+    }
   } else {
     formData.append('chunking_strategy', 'auto');
   }
 
   if (language && language !== 'auto') {
     formData.append('language', language);
-  }
-  if (promptHint && promptHint.trim()) {
-    formData.append('prompt', promptHint.trim());
   }
 
   var response = await fetch(OPENAI_API_BASE + '/audio/transcriptions', {
@@ -103,19 +94,11 @@ async function transcribeAudio(audioFile, language, promptHint, apiKey, transcri
   var data = await response.json();
 
   if (isLegacy) {
-    // whisper-1도 prompt echo가 생길 수 있으므로 첫 segment와 전체 text에서 제거
-    if (promptHint && promptHint.trim()) {
-      data.text = stripPromptEcho(data.text || '', promptHint);
-      if (data.segments && data.segments.length > 0) {
-        data.segments[0].text = stripPromptEcho(data.segments[0].text || '', promptHint);
-        data.segments = data.segments.filter(function (s) { return (s.text || '').trim().length > 0; });
-      }
-    }
     return data; // { text, segments: [{start, end, text}] }
   }
 
   // gpt-4o-transcribe: json 응답에는 segments 없음 → 문장 단위로 분할
-  var text = stripPromptEcho(data.text || '', promptHint);
+  var text = data.text || '';
   var parts = text.match(/[^.!?。\n]+[.!?。\n]*/g) || (text ? [text] : []);
   return {
     text: text,
@@ -125,7 +108,7 @@ async function transcribeAudio(audioFile, language, promptHint, apiKey, transcri
   };
 }
 
-async function transcribeAudioWithChunking(audioFile, language, promptHint, apiKey, transcribeModel, signal, onChunkSegments) {
+async function transcribeAudioWithChunking(audioFile, language, apiKey, transcribeModel, signal, onChunkSegments) {
   var knownDuration = getLoadedAudioDurationSec();
   var fitsDirectSize = audioFile.size <= MAX_DIRECT_UPLOAD_BYTES;
   var supportsServerChunking = transcribeModelSupportsServerChunking(transcribeModel);
@@ -133,7 +116,7 @@ async function transcribeAudioWithChunking(audioFile, language, promptHint, apiK
 
   if (fitsDirectSize && supportsServerChunking) {
     try {
-      return await transcribeAudio(audioFile, language, promptHint, apiKey, transcribeModel, signal);
+      return await transcribeAudio(audioFile, language, apiKey, transcribeModel, signal);
     } catch (err) {
       if (!isTranscriptionDurationLimitError(err)) throw err;
       serverChunkingDurationFallback = true;
@@ -143,7 +126,7 @@ async function transcribeAudioWithChunking(audioFile, language, promptHint, apiK
 
   // 파일 크기와 재생 시간이 모두 안전할 때만 직접 전송한다.
   if (!serverChunkingDurationFallback && fitsDirectSize && (knownDuration === null || knownDuration <= MAX_DIRECT_TRANSCRIBE_DURATION_SEC)) {
-    return transcribeAudio(audioFile, language, promptHint, apiKey, transcribeModel, signal);
+    return transcribeAudio(audioFile, language, apiKey, transcribeModel, signal);
   }
 
   if (!fitsDirectSize) {
@@ -169,7 +152,7 @@ async function transcribeAudioWithChunking(audioFile, language, promptHint, apiK
 
   if (fitsDirectSize && audioBuffer.duration <= MAX_DIRECT_TRANSCRIBE_DURATION_SEC) {
     showTranscribeProgress('전사 중...', null);
-    return transcribeAudio(audioFile, language, promptHint, apiKey, transcribeModel, signal);
+    return transcribeAudio(audioFile, language, apiKey, transcribeModel, signal);
   }
 
   // 3. OfflineAudioContext로 16kHz mono 리샘플링
@@ -182,7 +165,7 @@ async function transcribeAudioWithChunking(audioFile, language, promptHint, apiK
   var totalDuration = resampledBuffer.duration;
   var totalChunks = Math.ceil(totalDuration / CHUNK_DURATION_SEC);
   var allSegments = [];
-  var contextPrompt = promptHint || '';
+  var contextPrompt = '';
 
   for (var i = 0; i < totalChunks; i++) {
     if (signal && signal.aborted) throw new DOMException('전사가 취소되었습니다.', 'AbortError');
@@ -197,7 +180,7 @@ async function transcribeAudioWithChunking(audioFile, language, promptHint, apiK
     var wavBlob = extractChunkAsWav(resampledBuffer, startSec, endSec);
     var wavFile = new File([wavBlob], 'chunk_' + i + '.wav', { type: 'audio/wav' });
 
-    var result = await transcribeAudio(wavFile, language, contextPrompt, apiKey, transcribeModel, signal);
+    var result = await transcribeAudio(wavFile, language, apiKey, transcribeModel, signal, contextPrompt);
 
     // 타임스탬프에 청크 오프셋 적용
     var segments = (result.segments || []).map(function (seg) {
@@ -589,7 +572,6 @@ var state = {
   model: 'gpt-4.1-mini',
   transcribeModel: 'gpt-4o-transcribe',
   language: 'ko',
-  promptHint: '',
   summaryPrompt: '',
   summaryPromptDirty: false,
   currentFile: null,
@@ -633,8 +615,6 @@ var elements = {
   selectModel: document.getElementById('select-model'),
   selectTranscribeModel: document.getElementById('select-transcribe-model'),
   selectLang: document.getElementById('select-lang'),
-  inputPromptHint: document.getElementById('input-prompt-hint'),
-  btnResetPromptHint: document.getElementById('btn-reset-prompt-hint'),
   inputSummaryPrompt: document.getElementById('input-summary-prompt'),
   btnRunSummary: document.getElementById('btn-run-summary'),
   btnResetSummaryPrompt: document.getElementById('btn-reset-summary-prompt'),
@@ -717,7 +697,6 @@ document.addEventListener('DOMContentLoaded', function () {
   setupTranscriptActions();
   setupSummaryActions();
   setupChatActions();
-  setupPromptPresets();
   setupPromptHistory();
   restoreCachedTranscript();
   startVisualizer();
@@ -746,23 +725,6 @@ function setupTheme() {
     elements.themeToggleIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
     showToast(isLight ? '라이트 모드로 전환되었습니다.' : '다크 모드로 전환되었습니다.');
     if (window.lucide) window.lucide.createIcons();
-  });
-}
-
-function setupPromptPresets() {
-  var presets = document.querySelectorAll('.preset-badge');
-  presets.forEach(function (badge) {
-    badge.addEventListener('click', function () {
-      presets.forEach(function (b) { b.classList.remove('selected'); });
-      elements.inputPromptHint.value = badge.getAttribute('data-preset');
-      state.promptHint = elements.inputPromptHint.value;
-      if (state.promptHint) {
-        badge.classList.add('selected');
-        showToast('전사 힌트가 설정되었습니다.');
-      } else {
-        showToast('전사 힌트를 초기화했습니다.');
-      }
-    });
   });
 }
 
@@ -848,18 +810,10 @@ function setupSettingsListeners() {
   state.model = elements.selectModel.value;
   state.transcribeModel = elements.selectTranscribeModel.value;
   state.language = elements.selectLang.value;
-  state.promptHint = elements.inputPromptHint.value;
   state.summaryPrompt = elements.inputSummaryPrompt.value;
   elements.selectModel.addEventListener('change', function (e) { state.model = e.target.value; });
   elements.selectTranscribeModel.addEventListener('change', function (e) { state.transcribeModel = e.target.value; });
   elements.selectLang.addEventListener('change', function (e) { state.language = e.target.value; });
-  elements.inputPromptHint.addEventListener('input', function (e) { state.promptHint = e.target.value; });
-  elements.btnResetPromptHint.addEventListener('click', function () {
-    document.querySelectorAll('.preset-badge').forEach(function (b) { b.classList.remove('selected'); });
-    elements.inputPromptHint.value = '';
-    state.promptHint = '';
-    showToast('전사 힌트를 초기화했습니다.');
-  });
   elements.inputSummaryPrompt.addEventListener('input', function (e) {
     state.summaryPrompt = e.target.value;
     state.summaryPromptDirty = true;
@@ -1414,7 +1368,6 @@ async function triggerTranscribeAI(options) {
     var whisperData = await transcribeAudioWithChunking(
       state.currentFile,
       state.language,
-      state.promptHint,
       state.apiKey,
       state.transcribeModel,
       transcribeController.signal,

@@ -98,75 +98,6 @@ body {
    Recapify - Prompt Presets & Light Mode Override Rules
    ========================================================================== */
 
-/* Prompt Presets badges */
-.prompt-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.preset-badge {
-  font-size: 10px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-light);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: var(--transition-smooth);
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-}
-
-.preset-badge:hover {
-  background: rgba(139, 92, 246, 0.08);
-  border-color: var(--primary);
-  color: var(--primary);
-  transform: translateY(-1px);
-}
-
-.preset-badge.selected {
-  background: rgba(139, 92, 246, 0.15);
-  border-color: var(--primary);
-  color: var(--text-primary);
-  box-shadow: 0 0 8px rgba(139, 92, 246, 0.15);
-}
-
-.field-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.field-reset-btn {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.field-reset-btn:hover {
-  border-color: var(--border-glow);
-  color: var(--text-primary);
-  background: color-mix(in srgb, var(--bg-surface-elevated) 70%, transparent);
-}
-
-.field-reset-btn i,
-.field-reset-btn svg {
-  width: 12px;
-  height: 12px;
-}
-
 /* Light mode specific element tweaks */
 body.light-mode header {
   border-bottom: 1px solid rgba(15, 23, 42, 0.04);
@@ -263,21 +194,6 @@ body.light-mode .transcript-card:hover {
 
 body.light-mode .transcript-card.active-playback {
   background: rgba(124, 58, 237, 0.04);
-}
-
-body.light-mode .preset-badge {
-  background: rgba(15, 23, 42, 0.02);
-}
-
-body.light-mode .preset-badge:hover {
-  background: rgba(124, 58, 237, 0.05);
-  color: var(--primary);
-  border-color: var(--primary);
-}
-
-body.light-mode .preset-badge.selected {
-  background: rgba(124, 58, 237, 0.1);
-  color: var(--text-primary);
 }
 
 body.light-mode .summary-format-btn {
@@ -660,29 +576,6 @@ body.light-mode .logo-image-light {
 .select-custom option {
   background: var(--bg-deep);
   color: var(--text-primary);
-}
-
-.style-hint-wrapper {
-  grid-column: span 2;
-}
-
-.hint-input-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-}
-
-.hint-input-row .input-custom {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 34px;
-  height: 34px;
-  resize: none;
-}
-
-.hint-input-row .field-reset-btn {
-  flex-shrink: 0;
 }
 
 /* Audio Import upload-zone styling — compact horizontal row */
@@ -2353,13 +2246,6 @@ textarea.input-custom {
   overflow-wrap: anywhere;
 }
 
-.hint-input-row .input-custom {
-  min-height: 32px;
-  height: 32px;
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-
 .summary-prompt-panel,
 body.light-mode .summary-prompt-panel {
   padding: 10px;
@@ -2384,36 +2270,6 @@ body.light-mode .input-custom {
 .input-custom:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px var(--primary-glow);
-}
-
-.prompt-presets {
-  gap: 5px;
-}
-
-.preset-badge,
-body.light-mode .preset-badge {
-  min-height: 24px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  border-color: var(--border-light);
-  color: var(--text-muted);
-}
-
-.preset-badge:hover,
-body.light-mode .preset-badge:hover {
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
-  border-color: var(--border-glow);
-  color: var(--text-primary);
-  transform: none;
-}
-
-.preset-badge.selected,
-body.light-mode .preset-badge.selected {
-  background: color-mix(in srgb, var(--primary) 14%, transparent);
-  border-color: var(--border-glow);
-  color: var(--text-primary);
-  box-shadow: none;
 }
 
 .upload-zone,
@@ -3181,10 +3037,6 @@ body.light-mode .toast {
 
   .settings-grid {
     grid-template-columns: 1fr;
-  }
-
-  .style-hint-wrapper {
-    grid-column: span 1;
   }
 
   .tab-buttons {
