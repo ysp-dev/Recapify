@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(awk 'NR>=2520 && NR<=2550 {print NR\": \"$0}' /Users/youngsoonpark/Documents/GitHub/Recapify/style.css)",
+      "Bash(awk 'NR>=2100 && NR<=2110 {print NR\": \"$0}' /Users/youngsoonpark/Documents/GitHub/Recapify/style.css)",
+      "Bash(awk -F: '$2 > 2060 && $2 < 2550')",
+      "Bash(awk -F: '$2 < 2600')"
     ]
   }
 }

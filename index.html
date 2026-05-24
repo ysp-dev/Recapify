@@ -28,7 +28,7 @@
       
       <div class="header-actions">
         <!-- Theme Toggle Button -->
-        <button id="btn-theme-toggle" class="btn btn-secondary btn-icon" title="테마 변경" aria-label="테마 변경">
+        <button type="button" id="btn-theme-toggle" class="btn btn-secondary btn-icon" title="테마 변경" aria-label="테마 변경">
           <i data-lucide="sun" id="theme-toggle-icon"></i>
         </button>
         <!-- Secure API Key Input -->
@@ -90,15 +90,15 @@
 
             <!-- Transcription Prompt -->
             <div class="form-group style-hint-wrapper">
-              <div class="field-header">
-                <label for="input-prompt-hint">
-                  <i data-lucide="message-square-plus" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i> 전사 힌트
-                </label>
+              <label for="input-prompt-hint">
+                <i data-lucide="message-square-plus"></i> 전사 힌트
+              </label>
+              <div class="hint-input-row">
+                <input type="text" id="input-prompt-hint" class="input-custom" placeholder="고유명사, 제품명, 전문 용어만 입력">
                 <button type="button" id="btn-reset-prompt-hint" class="field-reset-btn" title="전사 힌트 초기화" aria-label="전사 힌트 초기화">
                   <i data-lucide="x"></i>
                 </button>
               </div>
-              <input type="text" id="input-prompt-hint" class="input-custom" placeholder="고유명사, 제품명, 전문 용어만 입력">
               <div class="prompt-presets">
                 <span class="preset-badge" data-preset="OpenAI, API, SDK, React, TypeScript, 릴리즈, 백로그, 배포">IT 스타트업</span>
                 <span class="preset-badge" data-preset="회의록, 액션아이템, 마일스톤, KPI, OKR, 스프린트, 로드맵">비즈니스</span>
@@ -112,13 +112,13 @@
         <!-- 2. Audio File Upload Area -->
         <div id="upload-zone" class="upload-zone">
           <div class="upload-icon-sm">
-            <i data-lucide="cloud-upload" style="width: 20px; height: 20px;"></i>
+            <i data-lucide="cloud-upload"></i>
           </div>
           <div class="upload-zone-text">
             <div class="upload-zone-title">오디오 파일</div>
             <div class="upload-zone-hint">MP3, M4A, WAV, OGG, WEBM</div>
           </div>
-          <button class="btn btn-secondary btn-sm" style="flex-shrink:0; margin-left:auto;">파일 선택</button>
+          <button type="button" id="btn-select-file" class="btn btn-secondary btn-sm" style="flex-shrink:0; margin-left:auto;">파일 선택</button>
           <input type="file" id="file-input" class="hidden" accept="audio/*" multiple>
         </div>
 
@@ -128,14 +128,14 @@
         <div id="audio-player-card" class="audio-player-card hidden">
           <div class="card-header">
             <div class="file-details">
-              <i data-lucide="music" style="color: var(--secondary);"></i>
+              <i data-lucide="music"></i>
               <div class="file-info-text">
                 <div id="file-name" class="file-name">선택된 파일 없음</div>
                 <div id="file-size" class="file-size">-</div>
               </div>
             </div>
             <button id="btn-remove-file" class="btn btn-icon btn-remove" title="파일 제거" aria-label="파일 제거">
-              <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+              <i data-lucide="x"></i>
             </button>
           </div>
 
@@ -166,7 +166,7 @@
             <!-- Tactile Dashboard Playback Buttons -->
             <div class="controls-row">
               <div class="speed-control-wrapper">
-                <i data-lucide="gauge" style="width: 12px; height: 12px; color: var(--text-muted);"></i>
+                <i data-lucide="gauge"></i>
                 <select id="speed-select" class="speed-select">
                   <option value="0.5">0.5x</option>
                   <option value="0.75">0.75x</option>
@@ -178,13 +178,13 @@
               </div>
 
               <div class="main-buttons">
-                <button id="btn-skip-back" class="btn-seek" title="10초 뒤로" aria-label="10초 뒤로"><i data-lucide="rotate-ccw"></i></button>
-                <button id="btn-play-pause" class="btn-play-pause" title="재생/일시정지" aria-label="재생"><i data-lucide="play"></i></button>
-                <button id="btn-skip-forward" class="btn-seek" title="10초 앞으로" aria-label="10초 앞으로"><i data-lucide="rotate-cw"></i></button>
+                <button type="button" id="btn-skip-back" class="btn-seek" title="10초 뒤로" aria-label="10초 뒤로"><i data-lucide="rotate-ccw"></i></button>
+                <button type="button" id="btn-play-pause" class="btn-play-pause" title="재생/일시정지" aria-label="재생"><i data-lucide="play"></i></button>
+                <button type="button" id="btn-skip-forward" class="btn-seek" title="10초 앞으로" aria-label="10초 앞으로"><i data-lucide="rotate-cw"></i></button>
               </div>
 
               <div class="volume-control-wrapper">
-                <button id="btn-mute" class="btn-mute" title="음소거" aria-label="음소거"><i data-lucide="volume-2" id="mute-icon"></i></button>
+                <button type="button" id="btn-mute" class="btn-mute" title="음소거" aria-label="음소거"><i data-lucide="volume-2" id="mute-icon"></i></button>
                 <input type="range" id="volume-slider" class="range-slider volume-slider" min="0" max="1" step="0.05" value="0.8">
               </div>
             </div>
@@ -193,10 +193,10 @@
 
         <!-- 4. Action Trigger Button + Progress -->
         <div class="action-area">
-          <button id="btn-transcribe" class="btn btn-primary btn-action-large" disabled>
+          <button type="button" id="btn-transcribe" class="btn btn-primary btn-action-large" disabled>
             <i data-lucide="wand-2"></i> AI 전사 및 요약 시작
           </button>
-          <button id="btn-cancel-transcribe" class="btn btn-secondary btn-cancel-transcribe hidden">
+          <button type="button" id="btn-cancel-transcribe" class="btn btn-secondary btn-cancel-transcribe hidden">
             <i data-lucide="circle-stop"></i> 전사 취소
           </button>
           <div id="transcribe-progress" class="transcribe-progress hidden">
@@ -216,14 +216,14 @@
         
         <!-- Tab Switch Header (Glassmorphic) -->
         <div class="tabs-nav-wrapper glass-panel">
-          <div class="tab-buttons">
-            <button id="tab-transcript" class="tab-btn active">
+          <div class="tab-buttons" role="tablist" aria-label="워크스페이스 탭">
+            <button type="button" id="tab-transcript" class="tab-btn active" role="tab" aria-selected="true" aria-controls="pane-transcript">
               <i data-lucide="file-text"></i> 전사록
             </button>
-            <button id="tab-summary" class="tab-btn">
+            <button type="button" id="tab-summary" class="tab-btn" role="tab" aria-selected="false" aria-controls="pane-summary">
               <i data-lucide="brain"></i> AI 정리<span class="tab-attention-dot" aria-hidden="true"></span>
             </button>
-            <button id="tab-chat" class="tab-btn">
+            <button type="button" id="tab-chat" class="tab-btn" role="tab" aria-selected="false" aria-controls="pane-chat">
               <i data-lucide="message-square"></i> Q&A
             </button>
           </div>
@@ -233,25 +233,25 @@
         <div class="workspace-body-container glass-panel">
           
           <!-- ==================== TAB 1: TRANSCRIPT ==================== -->
-          <div id="pane-transcript" class="pane-content active">
+          <div id="pane-transcript" class="pane-content active" role="tabpanel" aria-labelledby="tab-transcript">
             <div class="pane-header-actions">
               <div class="search-input-wrapper">
-                <i data-lucide="search" style="width: 14px; height: 14px;"></i>
+                <i data-lucide="search"></i>
                 <input type="text" id="transcript-search" placeholder="전사록 단어 검색..." disabled>
               </div>
               <div class="export-actions">
-                <button id="btn-import-transcript" class="btn btn-secondary btn-sm">
-                  <i data-lucide="upload" style="width: 12px; height: 12px;"></i> 가져오기
+                <button type="button" id="btn-import-transcript" class="btn btn-secondary btn-sm">
+                  <i data-lucide="folder-open"></i> 가져오기
                 </button>
                 <input type="file" id="transcript-file-input" class="hidden" accept=".txt,.md,.srt,.vtt,.json,text/plain,text/markdown,application/json">
-                <button id="btn-generate-chapters" class="btn btn-secondary btn-sm" disabled>
-                  <i data-lucide="list-tree" style="width: 12px; height: 12px;"></i> 챕터 생성
+                <button type="button" id="btn-generate-chapters" class="btn btn-secondary btn-sm" disabled>
+                  <i data-lucide="list-tree"></i> 챕터 생성
                 </button>
-                <button id="btn-copy-transcript" class="btn btn-secondary btn-sm" disabled>
-                  <i data-lucide="copy" style="width: 12px; height: 12px;"></i> 복사
+                <button type="button" id="btn-copy-transcript" class="btn btn-secondary btn-sm" disabled>
+                  <i data-lucide="copy"></i> 복사
                 </button>
-                <button id="btn-download-transcript" class="btn btn-secondary btn-sm" disabled>
-                  <i data-lucide="download" style="width: 12px; height: 12px;"></i> 다운로드
+                <button type="button" id="btn-download-transcript" class="btn btn-secondary btn-sm" disabled>
+                  <i data-lucide="download"></i> 다운로드
                 </button>
               </div>
             </div>
@@ -268,15 +268,15 @@
           </div>
 
           <!-- ==================== TAB 2: SUMMARY HUB ==================== -->
-          <div id="pane-summary" class="pane-content">
+          <div id="pane-summary" class="pane-content" role="tabpanel" aria-labelledby="tab-summary">
             <div class="summary-workspace-grid">
               
               <!-- Left Mini Sidebar: Format Choices -->
               <aside class="summary-menu-sidebar">
-                <button class="summary-format-btn active" data-format="summary">
+                <button type="button" class="summary-format-btn active" data-format="summary">
                   <i data-lucide="align-left"></i> 핵심 요약
                 </button>
-                <button class="summary-format-btn" data-format="notes">
+                <button type="button" class="summary-format-btn" data-format="notes">
                   <i data-lucide="network"></i> 구조화 노트 (마인드맵)
                 </button>
               </aside>
@@ -295,7 +295,7 @@
                       <button type="button" id="btn-run-summary" class="prompt-run-btn">
                         <i data-lucide="play"></i> 실행
                       </button>
-                      <button type="button" id="btn-reset-summary-prompt" class="prompt-reset-btn">초기화</button>
+                      <button type="button" id="btn-reset-summary-prompt" class="prompt-reset-btn"><i data-lucide="rotate-ccw"></i> 초기화</button>
                     </div>
                   </div>
                   <textarea id="input-summary-prompt" class="input-custom summary-prompt-input" rows="5" placeholder="정리 방식, 강조할 관점, 출력 형식 등을 입력하세요. 예: 임원 보고용으로 리스크와 의사결정 중심으로 간결하게 정리"></textarea>
@@ -304,11 +304,11 @@
                 <div class="viewer-actions-row">
                   <span id="summary-badge" class="badge-accent">OpenAI GPT 분석</span>
                   <div class="export-actions">
-                    <button id="btn-copy-summary" class="btn btn-secondary btn-sm" disabled>
-                      <i data-lucide="copy" style="width: 12px; height: 12px;"></i> 복사
+                    <button type="button" id="btn-copy-summary" class="btn btn-secondary btn-sm" disabled>
+                      <i data-lucide="copy"></i> 복사
                     </button>
-                    <button id="btn-download-summary" class="btn btn-secondary btn-sm" disabled>
-                      <i data-lucide="download" style="width: 12px; height: 12px;"></i> 다운로드 (.md)
+                    <button type="button" id="btn-download-summary" class="btn btn-secondary btn-sm" disabled>
+                      <i data-lucide="download"></i> 다운로드 (.md)
                     </button>
                   </div>
                 </div>
@@ -326,7 +326,7 @@
           </div>
 
           <!-- ==================== TAB 3: CHAT Q&A ==================== -->
-          <div id="pane-chat" class="pane-content">
+          <div id="pane-chat" class="pane-content" role="tabpanel" aria-labelledby="tab-chat">
             <div class="chat-workspace">
               <!-- Chat Timeline Message list -->
               <div id="chat-messages-container" class="chat-timeline scroll-custom">
@@ -343,7 +343,7 @@
               <div class="chat-input-sticky-row">
                 <div class="chat-input-wrapper">
                   <input type="text" id="chat-input" placeholder="전사록 내용 질문하기... (예: Action Item이 뭐야?)" disabled>
-                  <button id="btn-send-chat" class="btn-send" disabled title="메시지 전송" aria-label="메시지 전송">
+                  <button type="button" id="btn-send-chat" class="btn-send" disabled title="메시지 전송" aria-label="메시지 전송">
                     <i data-lucide="send"></i>
                   </button>
                 </div>
@@ -366,7 +366,7 @@
 
   <!-- Notification Popup Toast -->
   <div id="toast" class="toast hidden">
-    <i data-lucide="check-circle" style="color: var(--secondary); width:18px; height:18px;"></i>
+    <i data-lucide="check-circle"></i>
     <span id="toast-text">내용이 클립보드에 복사되었습니다!</span>
   </div>
 

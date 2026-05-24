@@ -2,38 +2,7 @@
    Recapify - Premium Dark Space Glassmorphism Stylesheet
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
-
-:root {
-  /* Curated Color Palette - HSL Tailored */
-  --bg-deep: #060913;
-  --bg-base: #0b0f19;
-  --bg-surface: rgba(17, 24, 39, 0.45);
-  --bg-surface-elevated: rgba(30, 41, 59, 0.7);
-  --primary: #8b5cf6;         /* Bright Violet */
-  --primary-rgb: 139, 92, 246;
-  --primary-glow: rgba(139, 92, 246, 0.25);
-  --secondary: #06b6d4;       /* Neon Cyan */
-  --secondary-rgb: 6, 182, 212;
-  --secondary-glow: rgba(6, 182, 212, 0.25);
-  --accent: #ec4899;          /* Hot Pink */
-  --accent-rgb: 236, 72, 153;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #64748b;
-  --border-light: rgba(255, 255, 255, 0.07);
-  --border-glow: rgba(139, 92, 246, 0.2);
-  --border-focus: rgba(6, 182, 212, 0.6);
-  --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255,255,255,0.05) inset;
-  
-  --radius-lg: 20px;
-  --radius-md: 14px;
-  --radius-sm: 8px;
-  --font-sans: 'Inter', sans-serif;
-  --font-header: 'Outfit', sans-serif;
-  
-  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* Reset & Global Styles */
 * {
@@ -181,31 +150,6 @@ body {
 .field-reset-btn svg {
   width: 12px;
   height: 12px;
-}
-
-/* ==================== PREMIUM LIGHT MODE SYSTEM ==================== */
-body.light-mode {
-  --bg-deep: #f1f5f9;
-  --bg-base: #e2e8f0;
-  --bg-surface: rgba(255, 255, 255, 0.65);
-  --bg-surface-elevated: rgba(255, 255, 255, 0.9);
-  --primary: #7c3aed;
-  --primary-rgb: 124, 58, 237;
-  --primary-glow: rgba(124, 58, 237, 0.15);
-  --secondary: #0891b2;
-  --secondary-rgb: 8, 145, 178;
-  --secondary-glow: rgba(8, 145, 178, 0.15);
-  --accent: #db2777;
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #64748b;
-  --border-light: rgba(15, 23, 42, 0.06);
-  --border-glow: rgba(124, 58, 237, 0.2);
-  --shadow-premium: 0 10px 30px -10px rgba(15, 23, 42, 0.06), 0 0 1px 1px rgba(255,255,255,1) inset;
-}
-
-body.light-mode {
-  background-image: none;
 }
 
 /* Light mode specific element tweaks */
@@ -598,6 +542,8 @@ body.light-mode .logo-image-light {
   font-weight: 500;
 }
 
+.btn-sm i, .btn-sm svg { width: 12px; height: 12px; }
+
 /* Master Workspace Grid */
 .main-grid {
   display: grid;
@@ -622,6 +568,7 @@ body.light-mode .logo-image-light {
   flex-direction: column;
   gap: 18px;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .panel-section-title {
@@ -667,6 +614,13 @@ body.light-mode .logo-image-light {
   letter-spacing: 0.5px;
 }
 
+.form-group label i, .form-group label svg {
+  width: 12px;
+  height: 12px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
 .select-custom, .input-custom {
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid var(--border-light);
@@ -694,7 +648,15 @@ body.light-mode .logo-image-light {
   grid-column: span 2;
 }
 
-.style-hint-wrapper .input-custom {
+.hint-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint-input-row .input-custom {
+  flex: 1;
+  max-width: 220px;
   min-height: 34px;
   height: 34px;
   resize: none;
@@ -732,6 +694,8 @@ body.light-mode .logo-image-light {
   flex-shrink: 0;
   transition: var(--transition-smooth);
 }
+
+.upload-icon-sm i, .upload-icon-sm svg { width: 20px; height: 20px; }
 
 .upload-zone:hover .upload-icon-sm {
   background: rgba(6, 182, 212, 0.12);
@@ -803,6 +767,8 @@ body.light-mode .logo-image-light {
   border: none;
   opacity: 0.6;
 }
+
+.btn-remove i, .btn-remove svg { width: 14px; height: 14px; }
 
 .btn-remove:hover {
   opacity: 1;
@@ -932,6 +898,8 @@ body.light-mode .logo-image-light {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
 }
+
+.speed-control-wrapper i, .speed-control-wrapper svg { width: 12px; height: 12px; color: var(--text-muted); }
 
 .speed-select {
   background: transparent;
@@ -1120,7 +1088,7 @@ body.light-mode .logo-image-light {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 380px;
+  min-height: 0;
 }
 
 /* Pane displays */
@@ -1128,7 +1096,9 @@ body.light-mode .logo-image-light {
   display: none;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
   padding: 20px;
+  overflow: hidden;
 }
 
 .pane-content.active {
@@ -1165,6 +1135,8 @@ body.light-mode .logo-image-light {
 .search-input-wrapper i {
   color: var(--text-muted);
   margin-right: 8px;
+  width: 14px;
+  height: 14px;
 }
 
 .search-input-wrapper input {
@@ -1191,6 +1163,7 @@ body.light-mode .logo-image-light {
   flex-direction: column;
   gap: 12px;
   padding-right: 6px;
+  min-height: 0;
 }
 
 /* Individual card styles */
@@ -1307,6 +1280,7 @@ body.light-mode .logo-image-light {
   grid-template-columns: 200px 1fr;
   gap: 16px;
   height: 100%;
+  min-height: 0;
 }
 
 @media (max-width: 768px) {
@@ -1394,6 +1368,8 @@ body.light-mode .logo-image-light {
   font-size: 11px;
   font-weight: 700;
 }
+
+.prompt-reset-btn i, .prompt-reset-btn svg { width: 11px; height: 11px; }
 
 .prompt-reset-btn {
   min-height: 24px;
@@ -1505,6 +1481,7 @@ body.light-mode .logo-image-light {
 /* Rich Markdown layout configurations inside card */
 .markdown-body {
   flex-grow: 1;
+  min-height: 0;
   font-size: 13.5px;
   line-height: 1.7;
   color: var(--text-secondary);
@@ -1654,6 +1631,7 @@ body.light-mode .logo-image-light {
 
 .chat-timeline {
   flex-grow: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1840,6 +1818,8 @@ body.light-mode .logo-image-light {
 .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
 /* Clipboard Toast status alert */
+.toast i, .toast svg { color: var(--secondary); width: 18px; height: 18px; flex-shrink: 0; }
+
 .toast {
   position: fixed;
   bottom: 24px;
@@ -1959,7 +1939,9 @@ body.light-mode .logo-image-light {
   --radius-lg: 8px;
   --radius-md: 8px;
   --radius-sm: 6px;
+  --font-sans: 'Inter', sans-serif;
   --font-header: var(--font-sans);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body.light-mode {
@@ -2281,7 +2263,7 @@ textarea.input-custom {
   overflow-wrap: anywhere;
 }
 
-.style-hint-wrapper .input-custom {
+.hint-input-row .input-custom {
   min-height: 32px;
   height: 32px;
   padding-top: 6px;
@@ -2557,7 +2539,7 @@ body.light-mode .tab-btn.active {
 
 .workspace-body-container {
   border-radius: var(--radius-lg);
-  min-height: 460px;
+  min-height: 0;
 }
 
 .pane-content {

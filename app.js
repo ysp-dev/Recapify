@@ -910,7 +910,7 @@ function enqueueAudioFiles(fileList) {
   });
 
   if (!files.length) {
-    if (fileList && fileList.length) alert('오디오 파일만 업로드할 수 있습니다.');
+    if (fileList && fileList.length) showToast('오디오 파일만 업로드할 수 있습니다.');
     return;
   }
 
@@ -1410,7 +1410,7 @@ async function triggerTranscribeAI(options) {
       renderBatchQueue();
     }
     resetWorkspaceData();
-    alert('AI 전사 오류: ' + err.message);
+    showToast('AI 전사 오류: ' + err.message);
   }
 }
 
@@ -1806,7 +1806,7 @@ function runActiveSummary() {
     return;
   }
   if (!state.apiKey) {
-    alert('OpenAI API Key를 입력해주세요.');
+    showToast('OpenAI API Key를 입력해주세요.');
     return;
   }
   if (state.summaryPromptDirty) {
@@ -2086,13 +2086,13 @@ function importTranscriptFile(file) {
       saveTranscriptCache();
       showToast('전사록을 가져왔습니다.');
     } catch (err) {
-      alert('전사록 가져오기 실패: ' + err.message);
+      showToast('전사록 가져오기 실패: ' + err.message);
     } finally {
       elements.transcriptFileInput.value = '';
     }
   };
   reader.onerror = function () {
-    alert('전사록 파일을 읽지 못했습니다.');
+    showToast('전사록 파일을 읽지 못했습니다.');
     elements.transcriptFileInput.value = '';
   };
   reader.readAsText(file);
@@ -2113,7 +2113,7 @@ async function triggerGenerateChapters() {
     return;
   }
   if (!state.apiKey) {
-    alert('OpenAI API Key를 입력해주세요.');
+    showToast('OpenAI API Key를 입력해주세요.');
     return;
   }
 
@@ -2180,7 +2180,8 @@ function getTranscriptDownloadName() {
 }
 
 function downloadTextFile(filename, content) {
-  var blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
+  var mimeType = filename.endsWith('.md') ? 'text/markdown;charset=utf-8;' : 'text/plain;charset=utf-8;';
+  var blob = new Blob([content], { type: mimeType });
   var url = URL.createObjectURL(blob);
   var link = document.createElement('a');
   link.href = url;
@@ -2194,13 +2195,13 @@ function downloadTextFile(filename, content) {
 
 function copyTextToClipboard(text, successMessage) {
   if (!navigator.clipboard || !navigator.clipboard.writeText) {
-    alert('클립보드 복사를 지원하지 않는 환경입니다. HTTPS 또는 최신 브라우저에서 다시 시도해 주세요.');
+    showToast('클립보드 복사를 지원하지 않는 환경입니다. HTTPS 또는 최신 브라우저에서 다시 시도해 주세요.');
     return;
   }
   navigator.clipboard.writeText(text)
     .then(function () { showToast(successMessage); })
     .catch(function () {
-      alert('클립보드 복사에 실패했습니다. 브라우저 권한 또는 HTTPS 환경을 확인해 주세요.');
+      showToast('클립보드 복사에 실패했습니다. 브라우저 권한 또는 HTTPS 환경을 확인해 주세요.');
     });
 }
 
@@ -2225,9 +2226,11 @@ function setupTabs() {
     t.btn.addEventListener('click', function () {
       tabs.forEach(function (item) {
         item.btn.classList.remove('active');
+        item.btn.setAttribute('aria-selected', 'false');
         item.pane.classList.remove('active');
       });
       t.btn.classList.add('active');
+      t.btn.setAttribute('aria-selected', 'true');
       t.pane.classList.add('active');
       if (t.pane === elements.paneSummary) markSummaryAttention(false);
 
