@@ -56,6 +56,16 @@ const SUMMARY_SYSTEM_PROMPTS = {
    OpenAI API Functions
    ========================================================================== */
 
+function stripPromptEcho(text, prompt) {
+  if (!text || !prompt) return text;
+  var hint = prompt.trim();
+  if (!hint) return text;
+  if (text.startsWith(hint)) {
+    return text.slice(hint.length).replace(/^[\s,.\n。！？!?]+/, '');
+  }
+  return text;
+}
+
 async function transcribeAudio(audioFile, language, promptHint, apiKey, transcribeModel, signal) {
   var model = transcribeModel || 'gpt-4o-transcribe';
   var isLegacy = (model === 'whisper-1');
@@ -93,11 +103,19 @@ async function transcribeAudio(audioFile, language, promptHint, apiKey, transcri
   var data = await response.json();
 
   if (isLegacy) {
+    // whisper-1도 prompt echo가 생길 수 있으므로 첫 segment와 전체 text에서 제거
+    if (promptHint && promptHint.trim()) {
+      data.text = stripPromptEcho(data.text || '', promptHint);
+      if (data.segments && data.segments.length > 0) {
+        data.segments[0].text = stripPromptEcho(data.segments[0].text || '', promptHint);
+        data.segments = data.segments.filter(function (s) { return (s.text || '').trim().length > 0; });
+      }
+    }
     return data; // { text, segments: [{start, end, text}] }
   }
 
   // gpt-4o-transcribe: json 응답에는 segments 없음 → 문장 단위로 분할
-  var text = data.text || '';
+  var text = stripPromptEcho(data.text || '', promptHint);
   var parts = text.match(/[^.!?。\n]+[.!?。\n]*/g) || (text ? [text] : []);
   return {
     text: text,
