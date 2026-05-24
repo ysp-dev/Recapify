@@ -1078,14 +1078,20 @@ function initWebAudio() {
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 256;
 
-    // captureStream taps the audio element output WITHOUT routing it through
-    // Web Audio API — the <audio> element plays directly to speakers/Bluetooth.
-    // analyserNode is NOT connected to audioCtx.destination (visualizer only).
-    var captureMethod = elements.mainAudio.captureStream || elements.mainAudio.mozCaptureStream;
-    if (captureMethod) {
-      var stream = captureMethod.call(elements.mainAudio);
-      sourceNode = audioCtx.createMediaStreamSource(stream);
-      sourceNode.connect(analyserNode);
+    // Mobile/iOS: captureStream is poorly supported and adds stream-decoding
+    // overhead that can worsen Bluetooth stutter — skip, show sine wave only.
+    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!isMobile) {
+      try {
+        var captureMethod = elements.mainAudio.captureStream || elements.mainAudio.mozCaptureStream;
+        if (captureMethod) {
+          var stream = captureMethod.call(elements.mainAudio);
+          sourceNode = audioCtx.createMediaStreamSource(stream);
+          sourceNode.connect(analyserNode);
+        }
+      } catch (e) {
+        // captureStream unsupported or failed — visualizer shows sine wave only
+      }
     }
   } catch (e) {
     console.warn('Web Audio init failed:', e);
@@ -1217,12 +1223,30 @@ function setupAudioPlayer() {
 
 function startAudioPlayback() {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  elements.mainAudio.play();
-  setPlayerBadgeState('playing', '재생 중');
-  elements.btnPlayPause.classList.add('playing');
-  elements.btnPlayPause.innerHTML = '<i data-lucide="pause"></i>';
-  elements.btnPlayPause.setAttribute('aria-label', '일시정지');
-  if (window.lucide) window.lucide.createIcons();
+  var playPromise = elements.mainAudio.play();
+  if (playPromise !== undefined) {
+    playPromise.then(function () {
+      setPlayerBadgeState('playing', '재생 중');
+      elements.btnPlayPause.classList.add('playing');
+      elements.btnPlayPause.innerHTML = '<i data-lucide="pause"></i>';
+      elements.btnPlayPause.setAttribute('aria-label', '일시정지');
+      if (window.lucide) window.lucide.createIcons();
+    }).catch(function (err) {
+      // Bluetooth 전환, autoplay 정책 등으로 play() 거부 — UI를 일시정지 상태로 복원
+      console.warn('play() rejected:', err);
+      setPlayerBadgeState('paused', '일시 정지');
+      elements.btnPlayPause.classList.remove('playing');
+      elements.btnPlayPause.innerHTML = '<i data-lucide="play"></i>';
+      elements.btnPlayPause.setAttribute('aria-label', '재생');
+      if (window.lucide) window.lucide.createIcons();
+    });
+  } else {
+    setPlayerBadgeState('playing', '재생 중');
+    elements.btnPlayPause.classList.add('playing');
+    elements.btnPlayPause.innerHTML = '<i data-lucide="pause"></i>';
+    elements.btnPlayPause.setAttribute('aria-label', '일시정지');
+    if (window.lucide) window.lucide.createIcons();
+  }
 }
 
 function pauseAudioPlayback() {
