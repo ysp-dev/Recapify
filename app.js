@@ -597,6 +597,13 @@ var audioCtx = null;
 var analyserNode = null;
 var sourceNode = null;
 
+// TTS (Web Speech API read-aloud)
+var tts = {
+  speaking: false,
+  segmentIndex: 0,
+  utterance: null
+};
+
 // GPT summary/chat requests are queued to avoid concurrent TPM spikes.
 var openAITextRequestQueue = Promise.resolve();
 var summaryPromptCacheTimer = null;
@@ -661,6 +668,7 @@ var elements = {
   paneChat: document.getElementById('pane-chat'),
 
   transcriptSearch: document.getElementById('transcript-search'),
+  btnTtsRead: document.getElementById('btn-tts-read'),
   btnImportTranscript: document.getElementById('btn-import-transcript'),
   transcriptFileInput: document.getElementById('transcript-file-input'),
   btnGenerateChapters: document.getElementById('btn-generate-chapters'),
@@ -1031,8 +1039,10 @@ function resetWorkspaceData() {
   elements.chaptersContainer.innerHTML = '';
   elements.chaptersContainer.classList.add('hidden');
 
+  stopTtsRead();
   elements.transcriptSearch.value = '';
   elements.transcriptSearch.disabled = true;
+  if (elements.btnTtsRead) elements.btnTtsRead.disabled = true;
   elements.btnGenerateChapters.disabled = true;
   elements.btnCopyTranscript.disabled = true;
   elements.btnDownloadTranscript.disabled = true;
@@ -1641,6 +1651,20 @@ function renderTranscriptTimeline(filterWord) {
 
     var actions = document.createElement('div');
     actions.className = 'transcript-card-actions';
+
+    var ttsButton = document.createElement('button');
+    ttsButton.type = 'button';
+    ttsButton.className = 'segment-copy-btn';
+    ttsButton.setAttribute('aria-label', '이 세그먼트부터 읽기');
+    ttsButton.innerHTML = '<i data-lucide="volume-2"></i>';
+    (function (seg) {
+      ttsButton.addEventListener('click', function (e) {
+        e.stopPropagation();
+        startTtsRead(state.transcriptParagraphs.indexOf(seg));
+      });
+    }(p));
+    actions.appendChild(ttsButton);
+
     var copyButton = document.createElement('button');
     copyButton.type = 'button';
     copyButton.className = 'segment-copy-btn';
@@ -2098,7 +2122,113 @@ function removeChatBubble(id) {
    Transcript Actions
    ========================================================================== */
 
+/* ==========================================================================
+   TTS Read-Aloud (Web Speech API)
+   ========================================================================== */
+
+function ttsLangCode() {
+  var lang = state.language || 'ko';
+  if (lang === 'ko') return 'ko-KR';
+  if (lang === 'en') return 'en-US';
+  if (lang === 'ja') return 'ja-JP';
+  return 'ko-KR';
+}
+
+function startTtsRead(fromIndex) {
+  if (!window.speechSynthesis) {
+    showToast('이 브라우저는 음성 읽기를 지원하지 않습니다.');
+    return;
+  }
+  stopTtsRead();
+
+  var segments = state.transcriptParagraphs;
+  if (!segments.length) return;
+
+  tts.speaking = true;
+  tts.segmentIndex = (typeof fromIndex === 'number' && fromIndex >= 0) ? fromIndex : 0;
+  updateTtsButton(true);
+  ttsSpeak();
+}
+
+function ttsSpeak() {
+  if (!tts.speaking) return;
+  var segments = state.transcriptParagraphs;
+  if (tts.segmentIndex >= segments.length) {
+    stopTtsRead();
+    return;
+  }
+
+  var seg = segments[tts.segmentIndex];
+  highlightTtsSegment(seg.id);
+
+  var utt = new SpeechSynthesisUtterance(seg.text);
+  utt.lang = ttsLangCode();
+  utt.rate = 1.0;
+  tts.utterance = utt;
+
+  utt.onend = function () {
+    if (!tts.speaking) return;
+    tts.segmentIndex++;
+    ttsSpeak();
+  };
+  utt.onerror = function (e) {
+    if (e.error === 'interrupted' || e.error === 'canceled') return;
+    stopTtsRead();
+    showToast('음성 읽기 오류: ' + e.error);
+  };
+
+  // iOS workaround: resume before each utterance to prevent silent cut-off
+  if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+  window.speechSynthesis.speak(utt);
+}
+
+function stopTtsRead() {
+  tts.speaking = false;
+  tts.utterance = null;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  clearTtsHighlight();
+  updateTtsButton(false);
+}
+
+function highlightTtsSegment(segId) {
+  document.querySelectorAll('.transcript-card.tts-reading').forEach(function (el) {
+    el.classList.remove('tts-reading');
+  });
+  var card = document.getElementById('transcript-card-' + segId);
+  if (card) {
+    card.classList.add('tts-reading');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function clearTtsHighlight() {
+  document.querySelectorAll('.transcript-card.tts-reading').forEach(function (el) {
+    el.classList.remove('tts-reading');
+  });
+}
+
+function updateTtsButton(isReading) {
+  if (!elements.btnTtsRead) return;
+  if (isReading) {
+    elements.btnTtsRead.classList.add('tts-active');
+    elements.btnTtsRead.innerHTML = '<i data-lucide="volume-x"></i> 중지';
+    elements.btnTtsRead.setAttribute('aria-label', '읽기 중지');
+  } else {
+    elements.btnTtsRead.classList.remove('tts-active');
+    elements.btnTtsRead.innerHTML = '<i data-lucide="volume-2"></i> 읽기';
+    elements.btnTtsRead.setAttribute('aria-label', '전사록 읽어주기');
+  }
+  if (window.lucide) window.lucide.createIcons();
+}
+
 function setupTranscriptActions() {
+  if (elements.btnTtsRead) {
+    elements.btnTtsRead.addEventListener('click', function () {
+      if (tts.speaking) stopTtsRead();
+      else startTtsRead(0);
+    });
+  }
+
   elements.btnImportTranscript.addEventListener('click', function () {
     elements.transcriptFileInput.click();
   });
@@ -2180,6 +2310,7 @@ function importTranscriptFile(file) {
 
 function enableTranscriptWorkspace() {
   elements.transcriptSearch.disabled = false;
+  if (elements.btnTtsRead) elements.btnTtsRead.disabled = false;
   elements.btnGenerateChapters.disabled = false;
   elements.btnCopyTranscript.disabled = false;
   elements.btnDownloadTranscript.disabled = false;
