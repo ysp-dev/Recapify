@@ -638,12 +638,15 @@ var elements = {
   timeElapsed: document.getElementById('time-elapsed'),
   timeTotal: document.getElementById('time-total'),
 
-  speedSelect: document.getElementById('speed-select'),
   btnSkipBack: document.getElementById('btn-skip-back'),
   btnPlayPause: document.getElementById('btn-play-pause'),
   btnSkipForward: document.getElementById('btn-skip-forward'),
   btnMute: document.getElementById('btn-mute'),
-  volumeSlider: document.getElementById('volume-slider'),
+  btnSpeed: document.getElementById('btn-speed'),
+  speedPopup: document.getElementById('speed-popup'),
+  speedLabel: document.getElementById('speed-label'),
+  speedOptions: document.querySelectorAll('.speed-option[data-speed]'),
+  btnVoiceEnhance: document.getElementById('btn-voice-enhance'),
 
   btnTranscribe: document.getElementById('btn-transcribe'),
   btnCancelTranscribe: document.getElementById('btn-cancel-transcribe'),
@@ -666,6 +669,7 @@ var elements = {
   btnGenerateChapters: document.getElementById('btn-generate-chapters'),
   btnCopyTranscript: document.getElementById('btn-copy-transcript'),
   btnDownloadTranscript: document.getElementById('btn-download-transcript'),
+  btnResetTranscript: document.getElementById('btn-reset-transcript'),
   chaptersContainer: document.getElementById('chapters-container'),
   transcriptContainer: document.getElementById('transcript-container'),
 
@@ -1060,6 +1064,7 @@ function resetWorkspaceData() {
   elements.btnGenerateChapters.disabled = true;
   elements.btnCopyTranscript.disabled = true;
   elements.btnDownloadTranscript.disabled = true;
+  elements.btnResetTranscript.disabled = true;
   elements.btnCopySummary.disabled = true;
   elements.btnDownloadSummary.disabled = true;
   elements.chatInput.disabled = true;
@@ -1189,34 +1194,54 @@ function setupAudioPlayer() {
     else pauseAudioPlayback();
   });
 
-  elements.btnSkipBack.addEventListener('click', function () { seekAudioRelative(-10); });
-  elements.btnSkipForward.addEventListener('click', function () { seekAudioRelative(10); });
+  elements.btnSkipBack.addEventListener('click', function () { seekAudioRelative(-15); });
+  elements.btnSkipForward.addEventListener('click', function () { seekAudioRelative(15); });
 
   elements.progressBar.addEventListener('input', function (e) {
     var total = elements.mainAudio.duration || 0;
     elements.mainAudio.currentTime = (parseFloat(e.target.value) / 100) * total;
   });
 
-  elements.speedSelect.addEventListener('change', function (e) {
-    elements.mainAudio.playbackRate = parseFloat(e.target.value);
+  // Speed popup toggle
+  elements.btnSpeed.addEventListener('click', function (e) {
+    e.stopPropagation();
+    elements.speedPopup.classList.toggle('hidden');
   });
 
-  elements.volumeSlider.addEventListener('input', function (e) {
-    var vol = parseFloat(e.target.value);
-    elements.mainAudio.volume = vol;
-    updateMuteIcon(vol);
+  // Speed option selection
+  elements.speedOptions.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var speed = parseFloat(btn.getAttribute('data-speed'));
+      elements.mainAudio.playbackRate = speed;
+      elements.speedLabel.textContent = speed === 1 ? '1x' : speed + 'x';
+      elements.speedOptions.forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      elements.speedPopup.classList.add('hidden');
+    });
   });
 
+  // Voice enhancement toggle
+  var voiceEnhanceEnabled = true;
+  elements.btnVoiceEnhance.addEventListener('click', function () {
+    voiceEnhanceEnabled = !voiceEnhanceEnabled;
+    elements.btnVoiceEnhance.classList.toggle('active', voiceEnhanceEnabled);
+    applyVoiceEnhancement(voiceEnhanceEnabled);
+  });
+
+  // Mute toggle
   elements.btnMute.addEventListener('click', function () {
     if (elements.mainAudio.volume > 0) {
       elements.mainAudio.volume = 0;
-      elements.volumeSlider.value = 0;
       updateMuteIcon(0);
     } else {
       elements.mainAudio.volume = 0.8;
-      elements.volumeSlider.value = 0.8;
       updateMuteIcon(0.8);
     }
+  });
+
+  // Close speed popup on outside click
+  document.addEventListener('click', function () {
+    elements.speedPopup.classList.add('hidden');
   });
 }
 
@@ -2050,6 +2075,12 @@ function setupTranscriptActions() {
     downloadTextFile(getTranscriptDownloadName(), state.transcriptText);
   });
 
+  elements.btnResetTranscript.addEventListener('click', function () {
+    resetWorkspaceData();
+    clearTranscriptCache();
+    showToast('전사록이 초기화되었습니다.');
+  });
+
   elements.btnCopySummary.addEventListener('click', function () {
     copyTextToClipboard(state.summaries[state.activeSummaryFormat], '요약 리포트가 클립보드에 복사되었습니다.');
   });
@@ -2103,6 +2134,7 @@ function enableTranscriptWorkspace() {
   elements.btnGenerateChapters.disabled = false;
   elements.btnCopyTranscript.disabled = false;
   elements.btnDownloadTranscript.disabled = false;
+  elements.btnResetTranscript.disabled = false;
   elements.chatInput.disabled = false;
   elements.btnSendChat.disabled = false;
 }

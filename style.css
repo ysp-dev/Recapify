@@ -652,14 +652,19 @@ body.light-mode .logo-image-light {
   display: flex;
   align-items: center;
   gap: 6px;
+  width: 100%;
 }
 
 .hint-input-row .input-custom {
-  flex: 1;
-  max-width: 220px;
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 34px;
   height: 34px;
   resize: none;
+}
+
+.hint-input-row .field-reset-btn {
+  flex-shrink: 0;
 }
 
 /* Audio Import upload-zone styling — compact horizontal row */
@@ -1095,7 +1100,7 @@ body.light-mode .logo-image-light {
 .pane-content {
   display: none;
   flex-direction: column;
-  height: 100%;
+  flex: 1 1 0;
   min-height: 0;
   padding: 20px;
   overflow: hidden;
@@ -1164,6 +1169,7 @@ body.light-mode .logo-image-light {
   gap: 12px;
   padding-right: 6px;
   min-height: 0;
+  overflow-y: auto;
 }
 
 /* Individual card styles */
@@ -1482,6 +1488,7 @@ body.light-mode .logo-image-light {
 .markdown-body {
   flex-grow: 1;
   min-height: 0;
+  overflow-y: auto;
   font-size: 13.5px;
   line-height: 1.7;
   color: var(--text-secondary);
@@ -1632,6 +1639,7 @@ body.light-mode .logo-image-light {
 .chat-timeline {
   flex-grow: 1;
   min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 14px;
