@@ -58,9 +58,9 @@
             <div class="form-group">
               <label for="select-model">GPT 모델 (요약·Q&A)</label>
               <select id="select-model" class="select-custom">
-                <option value="gpt-5.5" selected>GPT-5.5 (권장)</option>
+                <option value="gpt-5.5">GPT-5.5</option>
                 <option value="gpt-4.1">GPT-4.1 (안정)</option>
-                <option value="gpt-4.1-mini">GPT-4.1 mini (빠름·저비용)</option>
+                <option value="gpt-4.1-mini" selected>GPT-4.1 mini (권장)</option>
                 <option value="gpt-4.1-nano">GPT-4.1 nano (최저비용)</option>
               </select>
             </div>
@@ -89,14 +89,14 @@
             <!-- Transcription Prompt -->
             <div class="form-group style-hint-wrapper">
               <label for="input-prompt-hint">
-                <i data-lucide="message-square-plus" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i> 전사 프롬프트
+                <i data-lucide="message-square-plus" style="width:12px; height:12px; vertical-align:middle; margin-right:4px;"></i> 전사 힌트
               </label>
-              <textarea id="input-prompt-hint" class="input-custom" rows="6" placeholder="전사 지침 또는 전문 용어 입력" style="resize:vertical; font-size:11.5px; line-height:1.6;"></textarea>
+              <textarea id="input-prompt-hint" class="input-custom" rows="6" placeholder="고유명사, 제품명, 전문 용어만 입력" style="resize:vertical; font-size:11.5px; line-height:1.6;"></textarea>
               <div class="prompt-presets">
                 <span class="preset-badge" data-preset="OpenAI, API, SDK, React, TypeScript, 릴리즈, 백로그, 배포">IT 스타트업</span>
                 <span class="preset-badge" data-preset="회의록, 액션아이템, 마일스톤, KPI, OKR, 스프린트, 로드맵">비즈니스</span>
                 <span class="preset-badge" data-preset="딥러닝, 머신러닝, 파인튜닝, 임베딩, 토큰, LLM, RAG, 프롬프트">AI·데이터</span>
-                <span class="preset-badge" data-preset="추임새(음, 어, 아, 저 등)와 불필요한 반복 단어는 삭제하고 깔끔한 문장으로 정리해줘">추임새 생략</span>
+                <span class="preset-badge" data-preset="예산, 일정, 리스크, 이슈, 의사결정, 후속 조치">일반 회의</span>
               </div>
             </div>
           </div>

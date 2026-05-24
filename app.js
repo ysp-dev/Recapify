@@ -475,7 +475,7 @@ function enqueueOpenAITextRequest(task) {
 
 var state = {
   apiKey: '',
-  model: 'gpt-5.5',
+  model: 'gpt-4.1-mini',
   transcribeModel: 'gpt-4o-transcribe',
   language: 'ko',
   promptHint: '',
@@ -613,7 +613,7 @@ function setupPromptPresets() {
       badge.classList.add('selected');
       elements.inputPromptHint.value = badge.getAttribute('data-preset');
       state.promptHint = elements.inputPromptHint.value;
-      showToast('전사 프롬프트가 설정되었습니다.');
+      showToast('전사 힌트가 설정되었습니다.');
     });
   });
 }
@@ -985,13 +985,6 @@ function hideTranscribeProgress() {
    ========================================================================== */
 
 async function triggerTranscribeAI() {
-  if (!state.promptHint || !state.promptHint.trim()) {
-    elements.transcriptContainer.innerHTML = '<div class="empty-state"><i data-lucide="alert-triangle" class="empty-icon" style="color:#f59e0b;"></i><h3>전사 프롬프트를 입력해 주세요</h3><p>왼쪽 패널의 <strong>전사 프롬프트</strong> 항목에 전문 용어 또는 전사 지침을 입력한 후 다시 시도해 주세요.</p></div>';
-    if (window.lucide) window.lucide.createIcons();
-    showToast('전사 프롬프트를 먼저 입력해 주세요.');
-    return;
-  }
-
   stopAudioPlayback();
   elements.btnTranscribe.disabled = true;
   setPlayerBadgeState('transcribing', 'AI 분석 중');
