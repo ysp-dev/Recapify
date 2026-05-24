@@ -596,8 +596,6 @@ var state = {
 var audioCtx = null;
 var analyserNode = null;
 var sourceNode = null;
-var filterNode = null;
-var compressorNode = null;
 
 // GPT summary/chat requests are queued to avoid concurrent TPM spikes.
 var openAITextRequestQueue = Promise.resolve();
@@ -646,7 +644,6 @@ var elements = {
   speedPopup: document.getElementById('speed-popup'),
   speedLabel: document.getElementById('speed-label'),
   speedOptions: document.querySelectorAll('.speed-option[data-speed]'),
-  btnVoiceEnhance: document.getElementById('btn-voice-enhance'),
 
   btnTranscribe: document.getElementById('btn-transcribe'),
   btnCancelTranscribe: document.getElementById('btn-cancel-transcribe'),
@@ -1078,62 +1075,20 @@ function initWebAudio() {
   if (audioCtx) return;
   try {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Analyser only used for visualizer — silent branch (gain 0) so it never
-    // sits in the playback path. Bluetooth audio is not disrupted by analyser overhead.
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 256;
-    var analyserGain = audioCtx.createGain();
-    analyserGain.gain.value = 0;
-    analyserGain.connect(analyserNode);
-    // analyserNode intentionally NOT connected to destination
 
-    // Voice enhancement nodes (off by default — avoid double compression on Bluetooth)
-    filterNode = audioCtx.createBiquadFilter();
-    filterNode.type = 'highpass';
-    filterNode.frequency.value = 120;
-
-    compressorNode = audioCtx.createDynamicsCompressor();
-    compressorNode.threshold.value = -28;
-    compressorNode.knee.value = 10;
-    compressorNode.ratio.value = 3;
-    compressorNode.attack.value = 0.003;
-    compressorNode.release.value = 0.2;
-
-    sourceNode = audioCtx.createMediaElementSource(elements.mainAudio);
-    // Default OFF: sourceNode → destination (cleanest path for Bluetooth)
-    sourceNode.connect(analyserGain);
-    sourceNode.connect(audioCtx.destination);
-
-    sourceNode._analyserGain = analyserGain;
-  } catch (e) {
-    console.warn('Web Audio init failed:', e);
-  }
-}
-
-function applyVoiceEnhancement(enabled) {
-  if (!audioCtx || !sourceNode) return;
-  try {
-    var analyserGain = sourceNode._analyserGain;
-    sourceNode.disconnect();
-    if (analyserGain) {
-      filterNode.disconnect();
-      compressorNode.disconnect();
-      if (enabled) {
-        // sourceNode → filter → compressor → destination
-        //           ↘ analyserGain → analyserNode (silent branch)
-        sourceNode.connect(filterNode);
-        filterNode.connect(compressorNode);
-        compressorNode.connect(audioCtx.destination);
-      } else {
-        sourceNode.connect(audioCtx.destination);
-      }
-      sourceNode.connect(analyserGain);
-    } else {
-      sourceNode.connect(audioCtx.destination);
+    // captureStream taps the audio element output WITHOUT routing it through
+    // Web Audio API — the <audio> element plays directly to speakers/Bluetooth.
+    // analyserNode is NOT connected to audioCtx.destination (visualizer only).
+    var captureMethod = elements.mainAudio.captureStream || elements.mainAudio.mozCaptureStream;
+    if (captureMethod) {
+      var stream = captureMethod.call(elements.mainAudio);
+      sourceNode = audioCtx.createMediaStreamSource(stream);
+      sourceNode.connect(analyserNode);
     }
   } catch (e) {
-    console.warn('Voice enhance toggle failed:', e);
+    console.warn('Web Audio init failed:', e);
   }
 }
 
@@ -1241,15 +1196,6 @@ function setupAudioPlayer() {
       btn.classList.add('active');
       elements.speedPopup.classList.add('hidden');
     });
-  });
-
-  // Voice enhancement toggle — default OFF (prevents Bluetooth stutter)
-  var voiceEnhanceEnabled = false;
-  elements.btnVoiceEnhance.classList.remove('active');
-  elements.btnVoiceEnhance.addEventListener('click', function () {
-    voiceEnhanceEnabled = !voiceEnhanceEnabled;
-    elements.btnVoiceEnhance.classList.toggle('active', voiceEnhanceEnabled);
-    applyVoiceEnhancement(voiceEnhanceEnabled);
   });
 
   // Mute toggle

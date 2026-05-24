@@ -965,16 +965,6 @@ body.light-mode .logo-image-light {
 
 .speed-option:not(.active)::before { content: ''; width: 12px; flex-shrink: 0; }
 
-.speed-enhance-btn { gap: 4px; }
-.speed-enhance-btn .enhance-check { width: 12px; height: 12px; color: var(--primary); }
-.speed-enhance-btn:not(.active) .enhance-check { opacity: 0; }
-
-.speed-popup-divider {
-  height: 1px;
-  background: var(--border-light);
-  margin: 5px 0;
-}
-
 /* Mute button */
 .btn-mute-circle {
   width: 36px;
