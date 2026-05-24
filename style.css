@@ -1344,6 +1344,7 @@ body.light-mode .logo-image-light {
   color: var(--text-muted);
   font-size: 11px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .prompt-reset-btn i, .prompt-reset-btn svg { width: 11px; height: 11px; }
@@ -3101,6 +3102,23 @@ body.light-mode .toast {
   /* 전사록 카드 패딩 축소 */
   .transcript-card {
     padding: 10px;
+  }
+
+  /* AI 정리 프롬프트 헤더: 라벨 위, 액션 아래로 세로 분리 */
+  .summary-prompt-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .summary-prompt-actions {
+    width: 100%;
+  }
+
+  .prompt-history-select {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
   }
 
   /* 업로드 존 세로 정렬 */
