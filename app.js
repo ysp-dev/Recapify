@@ -1102,7 +1102,7 @@ function initWebAudio() {
 function setupPullToRefresh() {
   var ptr = document.getElementById('pull-to-refresh');
   if (!ptr) return;
-  var spinner = document.getElementById('ptr-spinner');
+  var icon = document.getElementById('ptr-icon');
   var startY = 0;
   var pulling = false;
   var THRESHOLD = 80;
@@ -1110,17 +1110,18 @@ function setupPullToRefresh() {
 
   function setPtrY(dist) {
     var t = Math.min(dist / MAX_PULL, 1);
-    var y = -52 + t * 68; // -52(hidden) → +16(visible)
+    var y = -72 + t * 88; // -72(hidden) → +16(visible)
     ptr.style.transition = 'none';
     ptr.style.transform = 'translateX(-50%) translateY(' + y + 'px)';
-    spinner.style.transform = 'rotate(' + (t * 360) + 'deg)';
+    ptr.classList.add('visible');
+    if (icon) icon.style.transform = 'rotate(' + (t * 180) + 'deg)';
   }
 
   function snapBack() {
-    ptr.style.transition = 'transform 0.25s ease';
-    ptr.style.transform = 'translateX(-50%) translateY(-52px)';
-    ptr.classList.remove('ready', 'loading');
-    spinner.style.transform = '';
+    ptr.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+    ptr.style.transform = 'translateX(-50%) translateY(-72px)';
+    ptr.classList.remove('ready', 'loading', 'visible');
+    if (icon) icon.style.transform = '';
   }
 
   document.addEventListener('touchstart', function (e) {
@@ -1145,7 +1146,7 @@ function setupPullToRefresh() {
       ptr.style.transition = 'transform 0.2s ease';
       ptr.style.transform = 'translateX(-50%) translateY(10px)';
       ptr.classList.add('loading');
-      spinner.style.transform = '';
+      if (icon) icon.style.transform = '';
       setTimeout(function () { location.reload(); }, 500);
     } else {
       snapBack();
