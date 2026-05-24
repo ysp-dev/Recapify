@@ -3039,11 +3039,6 @@ body.light-mode .toast {
     overflow-x: auto;
   }
 
-  .tab-btn {
-    flex: 0 0 auto;
-    min-width: 112px;
-  }
-
   .pane-header-actions,
   .viewer-actions-row {
     align-items: stretch;
