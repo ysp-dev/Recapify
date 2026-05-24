@@ -119,8 +119,8 @@
             <div class="upload-zone-title">오디오 파일</div>
             <div class="upload-zone-hint">MP3, M4A, WAV, OGG, WEBM</div>
           </div>
-          <button type="button" id="btn-select-file" class="btn btn-secondary btn-sm" style="flex-shrink:0; margin-left:auto;">파일 선택</button>
-          <input type="file" id="file-input" class="hidden" accept="audio/*" multiple>
+          <label for="file-input" class="btn btn-secondary btn-sm file-select-label" style="flex-shrink:0; margin-left:auto;">파일 선택</label>
+          <input type="file" id="file-input" class="file-input-hidden" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.webm,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/ogg,audio/webm,audio/aac,audio/flac" multiple>
         </div>
 
         <div id="batch-queue" class="batch-queue hidden"></div>

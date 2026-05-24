@@ -20,7 +20,6 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
-  overscroll-behavior-y: none;
 }
 
 /* Scrollbar Customization */
@@ -77,6 +76,21 @@ body {
 /* Helper hidden class */
 .hidden {
   display: none !important;
+}
+
+/* File input: 시각적으로 숨기되 display:none 미사용 (iOS Safari 호환) */
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.file-select-label {
+  cursor: pointer;
+  user-select: none;
 }
 
 /* ==========================================================================
@@ -2059,7 +2073,6 @@ body {
   width: 100%;
   overflow-x: hidden;
   overscroll-behavior-x: none;
-  overscroll-behavior-y: none;
 }
 
 .app-container,
