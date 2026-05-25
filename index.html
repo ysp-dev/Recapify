@@ -85,10 +85,11 @@
             <div class="form-group">
               <label for="select-model">GPT 모델 (요약·Q&A)</label>
               <select id="select-model" class="select-custom">
-                <option value="gpt-5.5">GPT-5.5</option>
-                <option value="gpt-4.1">GPT-4.1 (안정)</option>
-                <option value="gpt-4.1-mini" selected>GPT-4.1 mini (권장)</option>
-                <option value="gpt-4.1-nano">GPT-4.1 nano (최저비용)</option>
+                <option value="gpt-5.5" selected>GPT-5.5 (최신·최고품질)</option>
+                <option value="gpt-5.4-mini">GPT-5.4 mini (권장·균형)</option>
+                <option value="gpt-5.4-nano">GPT-5.4 nano (빠름·저비용)</option>
+                <option value="gpt-4.1">GPT-4.1 (이전 안정)</option>
+                <option value="gpt-4.1-mini">GPT-4.1 mini (기존 호환)</option>
               </select>
             </div>
 
@@ -382,7 +383,14 @@
     <span id="toast-text">내용이 클립보드에 복사되었습니다!</span>
   </div>
 
-  <!-- Script Modules -->
+  <!-- App scripts (classic scripts keep file:// compatibility) -->
+  <script src="js/state.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/transcript.js"></script>
+  <script src="js/summary.js"></script>
+  <script src="js/chat.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
