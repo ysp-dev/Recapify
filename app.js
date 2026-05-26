@@ -4,6 +4,7 @@
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', function () {
+  migrateLocalStorageKeys();
   setupApiKey();
   setupTheme();
   setupSettingsListeners();

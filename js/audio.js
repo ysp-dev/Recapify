@@ -102,7 +102,8 @@ async function transcribeAudioWithChunking(audioFile, language, apiKey, transcri
 
 async function resampleToMono16k(audioBuffer) {
   var targetLength = Math.ceil(audioBuffer.duration * WHISPER_SAMPLE_RATE);
-  var offlineCtx = new OfflineAudioContext(1, targetLength, WHISPER_SAMPLE_RATE);
+  var OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  var offlineCtx = new OfflineCtx(1, targetLength, WHISPER_SAMPLE_RATE);
   var source = offlineCtx.createBufferSource();
   source.buffer = audioBuffer;
   source.connect(offlineCtx.destination);
@@ -269,6 +270,7 @@ function handleAudioImport(file, options) {
 
   resetWorkspaceData();
   initWebAudio();
+  startVisualizer();
 
   if (file.size > MAX_DIRECT_UPLOAD_BYTES) {
     showToast('25MB 초과 파일입니다. 청크 분할 모드로 전사합니다.');
@@ -278,6 +280,7 @@ function handleAudioImport(file, options) {
 
 
 function resetAudioWorkspace() {
+  stopVisualizer();
   abortCurrentTranscription();
   clearTranscriptCache();
   state.fileQueue = [];
@@ -485,7 +488,17 @@ function setupPullToRefresh() {
 
 
 
+var visualizerRafId = null;
+
+function stopVisualizer() {
+  if (visualizerRafId !== null) {
+    cancelAnimationFrame(visualizerRafId);
+    visualizerRafId = null;
+  }
+}
+
 function startVisualizer() {
+  stopVisualizer();
   var canvas = elements.visualizer;
   var ctx = canvas.getContext('2d');
 
@@ -499,7 +512,7 @@ function startVisualizer() {
   var phase = 0;
 
   function draw() {
-    requestAnimationFrame(draw);
+    visualizerRafId = requestAnimationFrame(draw);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     var amplitude = 0.08;
@@ -539,7 +552,16 @@ function startVisualizer() {
       ctx.stroke();
     }
   }
-  draw();
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      stopVisualizer();
+    } else if (visualizerRafId === null) {
+      visualizerRafId = requestAnimationFrame(draw);
+    }
+  });
+
+  visualizerRafId = requestAnimationFrame(draw);
 }
 
 
@@ -753,6 +775,7 @@ async function triggerTranscribeAI(options) {
       throw new Error('OpenAI API Key를 입력해주세요.');
     }
 
+    var chunkRenderCount = 0;
     var whisperData = await transcribeAudioWithChunking(
       state.currentFile,
       state.language,
@@ -760,10 +783,15 @@ async function triggerTranscribeAI(options) {
       state.transcribeModel,
       transcribeController.signal,
       function (segments, chunkIndex, totalChunks) {
-        state.transcriptParagraphs = parseWhisperSegments(segments);
+        var newParagraphs = parseWhisperSegments(segments);
+        state.transcriptParagraphs = newParagraphs;
         state.transcriptText = buildTranscriptText(state.transcriptParagraphs);
-        renderTranscriptTimeline();
-        enableTranscriptWorkspace();
+        if (chunkRenderCount === 0) {
+          elements.transcriptContainer.innerHTML = '';
+          enableTranscriptWorkspace();
+        }
+        appendTranscriptCards(newParagraphs.slice(chunkRenderCount));
+        chunkRenderCount = newParagraphs.length;
         showTranscribeProgress('청크 ' + chunkIndex + ' / ' + totalChunks + ' 완료', Math.round((chunkIndex / totalChunks) * 100));
       }
     );

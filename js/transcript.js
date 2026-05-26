@@ -140,6 +140,98 @@ function formatTimestamp(seconds) {
 
 
 
+function createTranscriptCard(p, query) {
+  var card = document.createElement('div');
+  card.className = 'transcript-card';
+  card.id = 'transcript-card-' + p.id;
+  card.setAttribute('data-seconds', p.seconds);
+  card.setAttribute('role', 'button');
+  card.setAttribute('tabindex', '0');
+  card.setAttribute('aria-label', p.time ? p.time + ' 전사 위치로 이동' : '전사 단락');
+
+  var actions = document.createElement('div');
+  actions.className = 'transcript-card-actions';
+
+  var ttsButton = document.createElement('button');
+  ttsButton.type = 'button';
+  ttsButton.className = 'segment-copy-btn';
+  ttsButton.setAttribute('aria-label', '이 세그먼트부터 읽기');
+  ttsButton.innerHTML = '<i data-lucide="volume-2"></i>';
+  (function (seg) {
+    ttsButton.addEventListener('click', function (e) {
+      e.stopPropagation();
+      startTtsRead(state.transcriptParagraphs.indexOf(seg));
+    });
+  }(p));
+  actions.appendChild(ttsButton);
+
+  var copyButton = document.createElement('button');
+  copyButton.type = 'button';
+  copyButton.className = 'segment-copy-btn';
+  copyButton.setAttribute('aria-label', '이 세그먼트 복사');
+  copyButton.innerHTML = '<i data-lucide="copy"></i>';
+  copyButton.addEventListener('click', function (e) {
+    e.stopPropagation();
+    copyTextToClipboard(formatTranscriptSegment(p), '세그먼트를 복사했습니다.');
+  });
+  actions.appendChild(copyButton);
+  card.appendChild(actions);
+
+  if (p.time) {
+    var metadata = document.createElement('div');
+    metadata.className = 'card-metadata';
+    var timestamp = document.createElement('span');
+    timestamp.className = 'timestamp-badge';
+    timestamp.textContent = p.time;
+    metadata.appendChild(timestamp);
+    card.appendChild(metadata);
+  }
+
+  var speechText = document.createElement('div');
+  speechText.className = 'speech-text';
+  speechText.setAttribute('contenteditable', query ? 'false' : 'true');
+  speechText.setAttribute('role', 'textbox');
+  speechText.setAttribute('aria-label', '전사 텍스트 편집');
+  speechText.setAttribute('spellcheck', 'true');
+  appendHighlightedText(speechText, p.text, query);
+  card.appendChild(speechText);
+
+  speechText.addEventListener('click', function (e) { e.stopPropagation(); });
+  speechText.addEventListener('keydown', function (e) { e.stopPropagation(); });
+  speechText.addEventListener('blur', function () {
+    if (query) return;
+    updateTranscriptSegmentText(p.id, speechText.textContent);
+  });
+
+  card.addEventListener('click', function (e) {
+    if (e.target.closest('.transcript-card-actions') || e.target.closest('.speech-text')) return;
+    seekAudioToSeconds(p.seconds);
+  });
+  card.addEventListener('keydown', function (e) {
+    if (e.target.closest('.speech-text')) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      seekAudioToSeconds(p.seconds);
+    }
+  });
+
+  return card;
+}
+
+
+
+function appendTranscriptCards(paragraphs) {
+  if (!paragraphs.length) return;
+  var frag = document.createDocumentFragment();
+  paragraphs.forEach(function (p) {
+    frag.appendChild(createTranscriptCard(p, ''));
+  });
+  elements.transcriptContainer.appendChild(frag);
+  if (window.lucide) window.lucide.createIcons();
+}
+
+
+
 function renderTranscriptTimeline(filterWord) {
   filterWord = filterWord || '';
   elements.transcriptContainer.innerHTML = '';
@@ -154,82 +246,11 @@ function renderTranscriptTimeline(filterWord) {
     return;
   }
 
+  var frag = document.createDocumentFragment();
   filtered.forEach(function (p) {
-    var card = document.createElement('div');
-    card.className = 'transcript-card';
-    card.id = 'transcript-card-' + p.id;
-    card.setAttribute('data-seconds', p.seconds);
-    card.setAttribute('role', 'button');
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', p.time ? p.time + ' 전사 위치로 이동' : '전사 단락');
-
-    var actions = document.createElement('div');
-    actions.className = 'transcript-card-actions';
-
-    var ttsButton = document.createElement('button');
-    ttsButton.type = 'button';
-    ttsButton.className = 'segment-copy-btn';
-    ttsButton.setAttribute('aria-label', '이 세그먼트부터 읽기');
-    ttsButton.innerHTML = '<i data-lucide="volume-2"></i>';
-    (function (seg) {
-      ttsButton.addEventListener('click', function (e) {
-        e.stopPropagation();
-        startTtsRead(state.transcriptParagraphs.indexOf(seg));
-      });
-    }(p));
-    actions.appendChild(ttsButton);
-
-    var copyButton = document.createElement('button');
-    copyButton.type = 'button';
-    copyButton.className = 'segment-copy-btn';
-    copyButton.setAttribute('aria-label', '이 세그먼트 복사');
-    copyButton.innerHTML = '<i data-lucide="copy"></i>';
-    copyButton.addEventListener('click', function (e) {
-      e.stopPropagation();
-      copyTextToClipboard(formatTranscriptSegment(p), '세그먼트를 복사했습니다.');
-    });
-    actions.appendChild(copyButton);
-    card.appendChild(actions);
-
-    if (p.time) {
-      var metadata = document.createElement('div');
-      metadata.className = 'card-metadata';
-      var timestamp = document.createElement('span');
-      timestamp.className = 'timestamp-badge';
-      timestamp.textContent = p.time;
-      metadata.appendChild(timestamp);
-      card.appendChild(metadata);
-    }
-
-    var speechText = document.createElement('div');
-    speechText.className = 'speech-text';
-    speechText.setAttribute('contenteditable', query ? 'false' : 'true');
-    speechText.setAttribute('role', 'textbox');
-    speechText.setAttribute('aria-label', '전사 텍스트 편집');
-    speechText.setAttribute('spellcheck', 'true');
-    appendHighlightedText(speechText, p.text, query);
-    card.appendChild(speechText);
-
-    speechText.addEventListener('click', function (e) { e.stopPropagation(); });
-    speechText.addEventListener('keydown', function (e) { e.stopPropagation(); });
-    speechText.addEventListener('blur', function () {
-      if (query) return;
-      updateTranscriptSegmentText(p.id, speechText.textContent);
-    });
-
-    card.addEventListener('click', function (e) {
-      if (e.target.closest('.transcript-card-actions') || e.target.closest('.speech-text')) return;
-      seekAudioToSeconds(p.seconds);
-    });
-    card.addEventListener('keydown', function (e) {
-      if (e.target.closest('.speech-text')) return;
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        seekAudioToSeconds(p.seconds);
-      }
-    });
-    elements.transcriptContainer.appendChild(card);
+    frag.appendChild(createTranscriptCard(p, query));
   });
+  elements.transcriptContainer.appendChild(frag);
   if (window.lucide) window.lucide.createIcons();
 }
 
@@ -444,7 +465,7 @@ function ttsSpeak() {
   };
 
   // iOS workaround: resume before each utterance to prevent silent cut-off
-  if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+  if (window.speechSynthesis && window.speechSynthesis.paused) window.speechSynthesis.resume();
   window.speechSynthesis.speak(utt);
 }
 
@@ -531,6 +552,7 @@ function setupTranscriptActions() {
   });
 
   elements.btnResetTranscript.addEventListener('click', function () {
+    if (!confirm('전사록과 요약 결과가 모두 삭제됩니다.\n계속하시겠습니까?')) return;
     resetWorkspaceData();
     clearTranscriptCache();
     showToast('전사록이 초기화되었습니다.');

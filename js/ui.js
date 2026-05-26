@@ -2,8 +2,23 @@
    UI, Settings & Shared Utilities
    ========================================================================== */
 
+function migrateLocalStorageKeys() {
+  var migrations = [
+    ['aetherscribe_theme', 'recapify_theme'],
+    ['aetherscribe_api_key', 'recapify_api_key']
+  ];
+  migrations.forEach(function (pair) {
+    if (!localStorage.getItem(pair[1])) {
+      var val = localStorage.getItem(pair[0]);
+      if (val) { localStorage.setItem(pair[1], val); localStorage.removeItem(pair[0]); }
+    }
+  });
+}
+
+
+
 function setupTheme() {
-  var savedTheme = localStorage.getItem('aetherscribe_theme');
+  var savedTheme = localStorage.getItem('recapify_theme');
   if (!savedTheme) {
     savedTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
@@ -16,7 +31,7 @@ function setupTheme() {
 
   elements.btnThemeToggle.addEventListener('click', function () {
     var isLight = document.body.classList.toggle('light-mode');
-    localStorage.setItem('aetherscribe_theme', isLight ? 'light' : 'dark');
+    localStorage.setItem('recapify_theme', isLight ? 'light' : 'dark');
     elements.themeToggleIcon.setAttribute('data-lucide', isLight ? 'moon' : 'sun');
     showToast(isLight ? '라이트 모드로 전환되었습니다.' : '다크 모드로 전환되었습니다.');
     if (window.lucide) window.lucide.createIcons();
@@ -26,7 +41,7 @@ function setupTheme() {
 
 
 function setupApiKey() {
-  var savedKey = localStorage.getItem('aetherscribe_api_key');
+  var savedKey = localStorage.getItem('recapify_api_key');
   if (savedKey) {
     state.apiKey = savedKey;
     elements.apiKeyInput.value = savedKey;
@@ -37,10 +52,10 @@ function setupApiKey() {
     var key = e.target.value.trim();
     state.apiKey = key;
     if (key) {
-      localStorage.setItem('aetherscribe_api_key', key);
+      localStorage.setItem('recapify_api_key', key);
       elements.apiKeyWrapper.classList.add('secure');
     } else {
-      localStorage.removeItem('aetherscribe_api_key');
+      localStorage.removeItem('recapify_api_key');
       elements.apiKeyWrapper.classList.remove('secure');
     }
   });
