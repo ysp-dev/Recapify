@@ -168,7 +168,11 @@ function wavWriteString(view, offset, str) {
 function setupUploadZone() {
   elements.uploadZone.addEventListener('click', function (e) {
     if (e.target.closest('label') || e.target === elements.fileInput) return;
-    elements.fileInput.click();
+    // label.click() triggers the native label→input association, which is more
+    // reliable than input.click() on iOS Safari (especially in standalone web app mode).
+    var label = elements.uploadZone.querySelector('label[for="file-input"]');
+    if (label) label.click();
+    else elements.fileInput.click();
   });
 
   elements.fileInput.addEventListener('change', function (e) {

@@ -95,7 +95,6 @@ var tts = {
 
 // GPT summary/chat requests are queued to avoid concurrent TPM spikes.
 var openAITextRequestQueue = Promise.resolve();
-var summaryPromptCacheTimer = null;
 
 // DOM Elements
 var elements = {

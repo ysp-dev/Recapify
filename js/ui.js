@@ -83,7 +83,6 @@ function setupSettingsListeners() {
   elements.inputSummaryPrompt.addEventListener('input', function (e) {
     state.summaryPrompt = e.target.value;
     state.summaryPromptDirty = true;
-    clearTimeout(summaryPromptCacheTimer);
   });
   elements.inputSummaryPrompt.addEventListener('blur', function () {
     if (state.summaryPromptDirty) clearSummaryCache();

@@ -526,10 +526,6 @@ function setupTranscriptActions() {
     });
   }
 
-  elements.btnImportTranscript.addEventListener('click', function () {
-    elements.transcriptFileInput.click();
-  });
-
   elements.transcriptFileInput.addEventListener('change', function (e) {
     var file = e.target.files[0];
     if (file) importTranscriptFile(file);
