@@ -399,11 +399,17 @@ function highlightTranscriptPlayback(elapsed) {
     if (state.transcriptParagraphs[i].seconds <= elapsed) activeSegment = state.transcriptParagraphs[i];
     else break;
   }
+
+  // 세그먼트가 바뀌지 않으면 스킵 — timeupdate가 초당 여러 번 호출되므로 불필요한 스크롤 방지
+  if (activeSegment.id === state.lastPlaybackSegmentId) return;
+  state.lastPlaybackSegmentId = activeSegment.id;
+
   document.querySelectorAll('.transcript-card').forEach(function (el) { el.classList.remove('active-playback'); });
   var activeCard = document.getElementById('transcript-card-' + activeSegment.id);
   if (activeCard) {
     activeCard.classList.add('active-playback');
-    activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // 'center'는 iOS에서 위/아래 방향 모두 안정적으로 스크롤됨 ('nearest'는 iOS에서 위쪽 스크롤 버그 있음)
+    activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
 
@@ -488,7 +494,7 @@ function highlightTtsSegment(segId) {
   var card = document.getElementById('transcript-card-' + segId);
   if (card) {
     card.classList.add('tts-reading');
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
 

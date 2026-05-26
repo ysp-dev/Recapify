@@ -78,7 +78,8 @@ var state = {
   summaryRequests: {},
   activeSummaryFormat: 'summary',
   summaryPromptHistory: [],
-  chatHistory: []
+  chatHistory: [],
+  lastPlaybackSegmentId: null
 };
 
 // Web Audio

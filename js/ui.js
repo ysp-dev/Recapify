@@ -105,6 +105,7 @@ function resetWorkspaceData() {
   state.summaries = { summary: '', notes: '' };
   state.summaryRequests = {};
   state.chatHistory = [];
+  state.lastPlaybackSegmentId = null;
 
   elements.transcriptContainer.innerHTML = '<div class="empty-state"><i data-lucide="music-4" class="empty-icon"></i><h3>전사록 없음</h3><p>오디오가 준비되면 전사 결과가 표시됩니다.</p></div>';
   elements.summaryContent.innerHTML = '<div class="empty-state"><i data-lucide="sparkles" class="empty-icon text-accent"></i><h3>요약 없음</h3><p>전사 완료 후 선택한 형식의 리포트가 표시됩니다.</p></div>';
