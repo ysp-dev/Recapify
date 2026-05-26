@@ -165,7 +165,8 @@ function wavWriteString(view, offset, str) {
 
 
 function setupUploadZone() {
-  elements.uploadZone.addEventListener('click', function () {
+  elements.uploadZone.addEventListener('click', function (e) {
+    if (e.target.closest('label') || e.target === elements.fileInput) return;
     elements.fileInput.click();
   });
 
