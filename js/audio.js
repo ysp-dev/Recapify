@@ -208,10 +208,18 @@ function setupUploadZone() {
 
 
 
+var AUDIO_EXTENSIONS = ['mp3','m4a','aac','wav','ogg','flac','webm','opus','mp4','wma','amr','caf'];
+
+function isAudioFile(file) {
+  if (!file) return false;
+  if (file.type.startsWith('audio/')) return true;
+  // .webm / .m4a 등은 브라우저·OS에 따라 video/* 또는 빈 문자열로 오는 경우가 있어 확장자로 보조 검증
+  var ext = file.name.split('.').pop().toLowerCase();
+  return AUDIO_EXTENSIONS.indexOf(ext) !== -1;
+}
+
 function enqueueAudioFiles(fileList) {
-  var files = Array.prototype.slice.call(fileList || []).filter(function (file) {
-    return file && file.type.startsWith('audio/');
-  });
+  var files = Array.prototype.slice.call(fileList || []).filter(isAudioFile);
 
   if (!files.length) {
     if (fileList && fileList.length) showToast('오디오 파일만 업로드할 수 있습니다.');
