@@ -450,14 +450,17 @@ function setupPullToRefresh() {
     ptr.style.transition = 'none';
     ptr.style.transform = 'translateX(-50%) translateY(' + y + 'px)';
     ptr.classList.add('visible');
-    if (icon) icon.style.transform = 'rotate(' + (t * 180) + 'deg)';
+    if (icon) icon.style.transform = 'rotate(' + (t * 270) + 'deg) scale(' + (0.82 + t * 0.18) + ')';
   }
 
   function snapBack() {
     ptr.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
     ptr.style.transform = 'translateX(-50%) translateY(-72px)';
     ptr.classList.remove('ready', 'loading', 'visible');
-    if (icon) icon.style.transform = '';
+    if (icon) {
+      icon.style.animation = '';
+      icon.style.transform = '';
+    }
   }
 
   document.addEventListener('touchstart', function (e) {
@@ -482,7 +485,10 @@ function setupPullToRefresh() {
       ptr.style.transition = 'transform 0.2s ease';
       ptr.style.transform = 'translateX(-50%) translateY(10px)';
       ptr.classList.add('loading');
-      if (icon) icon.style.transform = '';
+      if (icon) {
+        icon.style.animation = '';
+        icon.style.transform = '';
+      }
       setTimeout(function () { location.reload(); }, 500);
     } else {
       snapBack();
@@ -866,5 +872,4 @@ async function triggerTranscribeAI(options) {
     showToast('AI 전사 오류: ' + err.message);
   }
 }
-
 

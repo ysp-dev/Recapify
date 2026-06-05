@@ -3163,40 +3163,70 @@ body.light-mode .toast {
   top: calc(env(safe-area-inset-top, 0px) + 8px);
   left: 50%;
   transform: translateX(-50%) translateY(-72px);
-  width: 52px;
-  height: 52px;
-  background: #ffffff;
+  width: 44px;
+  height: 44px;
+  background: rgba(248, 250, 252, 0.92);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
   pointer-events: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 12px 34px rgba(15, 23, 42, 0.16),
+    0 1px 3px rgba(15, 23, 42, 0.12),
+    inset 0 0 0 0.5px rgba(15, 23, 42, 0.08);
   transition: transform 0.2s ease, opacity 0.2s ease;
   opacity: 0;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 #ptr-icon {
-  width: 26px;
-  height: 26px;
-  color: #6366f1;
-  transition: transform 0.3s ease;
+  --ptr-size: 22px;
+  --ptr-blade: rgba(100, 116, 139, 0.96);
+  position: relative;
+  width: var(--ptr-size);
+  height: var(--ptr-size);
+  transition: transform 0.18s ease;
   transform: rotate(0deg);
 }
+
+.ptr-spinner span {
+  position: absolute;
+  left: calc(50% - 1px);
+  top: 1px;
+  width: 2px;
+  height: 6px;
+  background: var(--ptr-blade);
+  border-radius: 999px;
+  transform-origin: 50% 10px;
+}
+
+.ptr-spinner span:nth-child(1) { transform: rotate(0deg); opacity: 1; }
+.ptr-spinner span:nth-child(2) { transform: rotate(30deg); opacity: 0.92; }
+.ptr-spinner span:nth-child(3) { transform: rotate(60deg); opacity: 0.84; }
+.ptr-spinner span:nth-child(4) { transform: rotate(90deg); opacity: 0.76; }
+.ptr-spinner span:nth-child(5) { transform: rotate(120deg); opacity: 0.68; }
+.ptr-spinner span:nth-child(6) { transform: rotate(150deg); opacity: 0.6; }
+.ptr-spinner span:nth-child(7) { transform: rotate(180deg); opacity: 0.52; }
+.ptr-spinner span:nth-child(8) { transform: rotate(210deg); opacity: 0.44; }
+.ptr-spinner span:nth-child(9) { transform: rotate(240deg); opacity: 0.36; }
+.ptr-spinner span:nth-child(10) { transform: rotate(270deg); opacity: 0.28; }
+.ptr-spinner span:nth-child(11) { transform: rotate(300deg); opacity: 0.2; }
+.ptr-spinner span:nth-child(12) { transform: rotate(330deg); opacity: 0.12; }
 
 #pull-to-refresh.visible {
   opacity: 1;
 }
 
 #pull-to-refresh.ready #ptr-icon {
-  color: var(--primary);
-  transform: rotate(180deg);
+  --ptr-blade: rgba(71, 85, 105, 1);
 }
 
 #pull-to-refresh.loading #ptr-icon {
-  color: var(--primary);
-  animation: ptr-spin 0.7s linear infinite;
+  --ptr-blade: rgba(71, 85, 105, 1);
+  animation: ptr-spin 0.85s steps(12) infinite;
 }
 
 @keyframes ptr-spin {
