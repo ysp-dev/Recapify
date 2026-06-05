@@ -3165,7 +3165,7 @@ body.light-mode .toast {
   transform: translateX(-50%) translateY(-72px);
   width: 44px;
   height: 44px;
-  background: rgba(248, 250, 252, 0.92);
+  background: rgba(25, 27, 23, 0.78);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -3173,9 +3173,9 @@ body.light-mode .toast {
   z-index: 10000;
   pointer-events: none;
   box-shadow:
-    0 12px 34px rgba(15, 23, 42, 0.16),
-    0 1px 3px rgba(15, 23, 42, 0.12),
-    inset 0 0 0 0.5px rgba(15, 23, 42, 0.08);
+    0 16px 38px rgba(0, 0, 0, 0.24),
+    0 1px 8px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 1px rgba(244, 244, 239, 0.08);
   transition: transform 0.2s ease, opacity 0.2s ease;
   opacity: 0;
   backdrop-filter: blur(18px);
@@ -3184,7 +3184,7 @@ body.light-mode .toast {
 
 #ptr-icon {
   --ptr-size: 22px;
-  --ptr-blade: rgba(100, 116, 139, 0.96);
+  --ptr-blade: rgba(220, 226, 215, 0.92);
   position: relative;
   width: var(--ptr-size);
   height: var(--ptr-size);
@@ -3221,12 +3221,29 @@ body.light-mode .toast {
 }
 
 #pull-to-refresh.ready #ptr-icon {
-  --ptr-blade: rgba(71, 85, 105, 1);
+  --ptr-blade: rgba(244, 244, 239, 0.98);
 }
 
 #pull-to-refresh.loading #ptr-icon {
-  --ptr-blade: rgba(71, 85, 105, 1);
+  --ptr-blade: rgba(244, 244, 239, 0.98);
   animation: ptr-spin 0.85s steps(12) infinite;
+}
+
+body.light-mode #pull-to-refresh {
+  background: rgba(248, 250, 252, 0.92);
+  box-shadow:
+    0 12px 34px rgba(15, 23, 42, 0.16),
+    0 1px 3px rgba(15, 23, 42, 0.12),
+    inset 0 0 0 0.5px rgba(15, 23, 42, 0.08);
+}
+
+body.light-mode #ptr-icon {
+  --ptr-blade: rgba(100, 116, 139, 0.96);
+}
+
+body.light-mode #pull-to-refresh.ready #ptr-icon,
+body.light-mode #pull-to-refresh.loading #ptr-icon {
+  --ptr-blade: rgba(71, 85, 105, 1);
 }
 
 @keyframes ptr-spin {
