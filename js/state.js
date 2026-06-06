@@ -102,6 +102,7 @@ var elements = {
   apiKeyInput: document.getElementById('api-key'),
   apiKeyWrapper: document.getElementById('api-key-wrapper'),
   btnToggleApiKey: document.getElementById('btn-toggle-api-key'),
+  btnCollapseApiKey: document.getElementById('btn-collapse-api-key'),
 
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
   themeToggleIcon: document.getElementById('theme-toggle-icon'),

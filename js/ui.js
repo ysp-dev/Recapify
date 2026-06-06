@@ -41,12 +41,29 @@ function setupTheme() {
 
 
 function setupApiKey() {
+  function setApiKeyReveal(isRevealed) {
+    elements.apiKeyInput.type = isRevealed ? 'text' : 'password';
+    elements.btnToggleApiKey.setAttribute('title', isRevealed ? 'API Key 숨기기' : 'API Key 보이기');
+    elements.btnToggleApiKey.setAttribute('aria-label', isRevealed ? 'API Key 숨기기' : 'API Key 보이기');
+    elements.btnToggleApiKey.innerHTML = '<i data-lucide="' + (isRevealed ? 'eye-off' : 'eye') + '"></i>';
+  }
+
+  function setApiKeyCollapsed(isCollapsed) {
+    elements.apiKeyWrapper.classList.toggle('collapsed', isCollapsed);
+    elements.btnCollapseApiKey.setAttribute('title', isCollapsed ? 'API Key 펼치기' : 'API Key 접기');
+    elements.btnCollapseApiKey.setAttribute('aria-label', isCollapsed ? 'API Key 펼치기' : 'API Key 접기');
+    elements.btnCollapseApiKey.innerHTML = '<i data-lucide="' + (isCollapsed ? 'chevrons-left' : 'chevrons-right') + '"></i>';
+    if (isCollapsed) setApiKeyReveal(false);
+    if (window.lucide) window.lucide.createIcons();
+  }
+
   var savedKey = localStorage.getItem('recapify_api_key');
   if (savedKey) {
     state.apiKey = savedKey;
     elements.apiKeyInput.value = savedKey;
     elements.apiKeyWrapper.classList.add('secure');
   }
+  setApiKeyCollapsed(!!savedKey);
 
   elements.apiKeyInput.addEventListener('input', function (e) {
     var key = e.target.value.trim();
@@ -61,12 +78,18 @@ function setupApiKey() {
   });
 
   elements.btnToggleApiKey.addEventListener('click', function () {
-    var isHidden = elements.apiKeyInput.type === 'password';
-    elements.apiKeyInput.type = isHidden ? 'text' : 'password';
-    elements.btnToggleApiKey.setAttribute('title', isHidden ? 'API Key 숨기기' : 'API Key 보이기');
-    elements.btnToggleApiKey.setAttribute('aria-label', isHidden ? 'API Key 숨기기' : 'API Key 보이기');
-    elements.btnToggleApiKey.innerHTML = '<i data-lucide="' + (isHidden ? 'eye-off' : 'eye') + '"></i>';
+    if (elements.apiKeyWrapper.classList.contains('collapsed')) setApiKeyCollapsed(false);
+    setApiKeyReveal(elements.apiKeyInput.type === 'password');
     if (window.lucide) window.lucide.createIcons();
+  });
+
+  elements.btnCollapseApiKey.addEventListener('click', function () {
+    var isCollapsed = elements.apiKeyWrapper.classList.contains('collapsed');
+    setApiKeyCollapsed(!isCollapsed);
+    if (isCollapsed) {
+      elements.apiKeyInput.focus();
+      elements.apiKeyInput.select();
+    }
   });
 }
 
@@ -235,4 +258,3 @@ function setupTabs() {
 function markSummaryAttention(isActive) {
   elements.tabSummary.classList.toggle('has-attention', isActive);
 }
-

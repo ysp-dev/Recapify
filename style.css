@@ -340,6 +340,7 @@ body.light-mode .logo-image-light {
   border-radius: var(--radius-md);
   padding: 1px 4px 1px 6px;
   transition: var(--transition-smooth);
+  overflow: hidden;
 }
 
 .apikey-input-wrapper:focus-within {
@@ -374,6 +375,7 @@ body.light-mode .logo-image-light {
   outline: none;
   width: 146px;
   padding: 4px 0;
+  transition: width 0.18s ease, opacity 0.18s ease, margin 0.18s ease;
 }
 
 .apikey-toggle {
@@ -401,6 +403,25 @@ body.light-mode .logo-image-light {
   width: 12px;
   height: 12px;
   margin: 0;
+}
+
+.apikey-input-wrapper.collapsed {
+  gap: 0;
+  padding-right: 3px;
+}
+
+.apikey-input-wrapper.collapsed .apikey-input,
+.apikey-input-wrapper.collapsed #btn-toggle-api-key {
+  width: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.apikey-input-wrapper.collapsed .apikey-collapse {
+  color: var(--text-secondary);
 }
 
 /* Button UI Components */

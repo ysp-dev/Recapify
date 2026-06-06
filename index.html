@@ -53,6 +53,9 @@
             <button type="button" id="btn-toggle-api-key" class="apikey-toggle" title="API Key 보이기" aria-label="API Key 보이기">
               <i data-lucide="eye"></i>
             </button>
+            <button type="button" id="btn-collapse-api-key" class="apikey-toggle apikey-collapse" title="API Key 접기" aria-label="API Key 접기">
+              <i data-lucide="chevrons-right"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -383,9 +386,9 @@
   </div>
 
   <!-- App scripts (classic scripts keep file:// compatibility) -->
-  <script src="js/state.js"></script>
+  <script src="js/state.js?v=api-key-collapse"></script>
   <script src="js/api.js"></script>
-  <script src="js/ui.js"></script>
+  <script src="js/ui.js?v=api-key-collapse"></script>
   <script src="js/audio.js"></script>
   <script src="js/transcript.js"></script>
   <script src="js/summary.js"></script>
