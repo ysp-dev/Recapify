@@ -1919,25 +1919,25 @@ body.light-mode .logo-image-light {
    ========================================================================== */
 
 :root {
-  --bg-deep: #0b1010;
-  --bg-base: #101716;
-  --bg-surface: rgba(17, 25, 24, 0.9);
-  --bg-surface-elevated: rgba(24, 34, 32, 0.96);
-  --primary: #68d7c3;
-  --primary-rgb: 104, 215, 195;
-  --primary-glow: rgba(104, 215, 195, 0.2);
-  --secondary: #91a7ff;
-  --secondary-rgb: 145, 167, 255;
-  --secondary-glow: rgba(145, 167, 255, 0.16);
-  --accent: #f0b66f;
-  --accent-rgb: 240, 182, 111;
-  --text-primary: #f2f7f4;
-  --text-secondary: #c3d0cb;
-  --text-muted: #7d918b;
-  --border-light: rgba(212, 232, 225, 0.11);
-  --border-glow: rgba(104, 215, 195, 0.32);
-  --border-focus: rgba(104, 215, 195, 0.56);
-  --shadow-premium: 0 22px 60px rgba(0, 0, 0, 0.32), 0 1px 0 rgba(242, 247, 244, 0.045) inset;
+  --bg-deep: #010409;
+  --bg-base: #0d1117;
+  --bg-surface: rgba(13, 17, 23, 0.94);
+  --bg-surface-elevated: rgba(22, 27, 34, 0.96);
+  --primary: #58a6ff;
+  --primary-rgb: 88, 166, 255;
+  --primary-glow: rgba(88, 166, 255, 0.18);
+  --secondary: #3fb950;
+  --secondary-rgb: 63, 185, 80;
+  --secondary-glow: rgba(63, 185, 80, 0.16);
+  --accent: #f78166;
+  --accent-rgb: 247, 129, 102;
+  --text-primary: #f0f6fc;
+  --text-secondary: #c9d1d9;
+  --text-muted: #8b949e;
+  --border-light: rgba(48, 54, 61, 0.96);
+  --border-glow: rgba(88, 166, 255, 0.34);
+  --border-focus: rgba(88, 166, 255, 0.62);
+  --shadow-premium: 0 16px 44px rgba(0, 0, 0, 0.3);
   --radius-lg: 8px;
   --radius-md: 8px;
   --radius-sm: 6px;
@@ -1974,9 +1974,8 @@ body,
 body.light-mode {
   background-color: var(--bg-deep);
   background-image:
-    linear-gradient(180deg, rgba(var(--primary-rgb), 0.08), transparent 360px),
-    linear-gradient(115deg, rgba(var(--secondary-rgb), 0.055), transparent 44%),
-    linear-gradient(245deg, rgba(var(--accent-rgb), 0.035), transparent 56%);
+    linear-gradient(180deg, rgba(88, 166, 255, 0.055), transparent 280px),
+    linear-gradient(180deg, #0d1117 0%, #010409 100%);
   line-height: 1.45;
   display: block;
 }
@@ -2059,18 +2058,22 @@ body {
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-premium);
-  backdrop-filter: blur(12px) saturate(118%);
-  -webkit-backdrop-filter: blur(12px) saturate(118%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .glass-panel:hover {
   border-color: var(--border-light);
 }
 
+body.light-mode .glass-panel {
+  background: var(--bg-surface);
+}
+
 body:not(.light-mode) header.glass-panel {
-  background: rgba(8, 12, 12, 0.88);
-  border-color: rgba(212, 232, 225, 0.08);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(242, 247, 244, 0.04);
+  background: #010409;
+  border-color: rgba(48, 54, 61, 0.96);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
 }
 
 header {
@@ -2155,10 +2158,10 @@ body.light-mode .apikey-input-wrapper {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--secondary) 68%, var(--primary)));
-  color: #061211;
+  background: var(--secondary);
+  color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 14px 34px rgba(var(--primary-rgb), 0.18);
+  box-shadow: 0 10px 24px rgba(var(--secondary-rgb), 0.18);
 }
 
 body.light-mode .btn-primary {
@@ -2168,7 +2171,8 @@ body.light-mode .btn-primary {
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 18px 40px rgba(var(--primary-rgb), 0.24);
+  background: color-mix(in srgb, var(--secondary) 86%, #ffffff);
+  box-shadow: 0 12px 28px rgba(var(--secondary-rgb), 0.22);
   border-color: transparent;
 }
 
@@ -2241,13 +2245,18 @@ body.light-mode .btn-primary {
 body.light-mode .settings-box,
 .audio-player-card,
 body.light-mode .audio-player-card {
-  background: color-mix(in srgb, var(--bg-surface-elevated) 74%, transparent);
+  background: var(--bg-surface-elevated);
   border-color: var(--border-light);
   border-radius: var(--radius-md);
 }
 
 .settings-box {
   padding: 12px;
+}
+
+body.light-mode .settings-box,
+body.light-mode .audio-player-card {
+  background: color-mix(in srgb, var(--bg-surface-elevated) 74%, transparent);
 }
 
 .settings-grid {
@@ -2315,7 +2324,7 @@ body.light-mode .upload-zone {
   border-style: solid;
   border-width: 1px;
   border-color: var(--border-light);
-  background: color-mix(in srgb, var(--bg-surface-elevated) 62%, transparent);
+  background: color-mix(in srgb, var(--bg-surface-elevated) 82%, transparent);
   border-radius: var(--radius-md);
 }
 
@@ -2325,6 +2334,10 @@ body.light-mode .upload-zone:hover {
   border-color: var(--border-glow);
   background: color-mix(in srgb, var(--primary) 8%, var(--bg-surface-elevated));
   box-shadow: none;
+}
+
+body.light-mode .upload-zone {
+  background: color-mix(in srgb, var(--bg-surface-elevated) 62%, transparent);
 }
 
 .upload-icon-sm,
@@ -2509,7 +2522,13 @@ body.light-mode .tab-btn.active {
   background: var(--bg-surface-elevated);
   border: 1px solid var(--border-light);
   color: var(--text-primary);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+body.light-mode .tab-btn.active {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-light);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
 }
 
 .workspace-body-container {
@@ -3183,7 +3202,7 @@ body.light-mode .toast {
   transform: translateX(-50%) translateY(-72px);
   width: 44px;
   height: 44px;
-  background: rgba(17, 25, 24, 0.82);
+  background: rgba(22, 27, 34, 0.92);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -3193,7 +3212,7 @@ body.light-mode .toast {
   box-shadow:
     0 16px 38px rgba(0, 0, 0, 0.24),
     0 1px 8px rgba(0, 0, 0, 0.22),
-    inset 0 0 0 1px rgba(212, 232, 225, 0.1);
+    inset 0 0 0 1px rgba(48, 54, 61, 0.96);
   transition: transform 0.2s ease, opacity 0.2s ease;
   opacity: 0;
   backdrop-filter: blur(18px);
@@ -3202,7 +3221,7 @@ body.light-mode .toast {
 
 #ptr-icon {
   --ptr-size: 22px;
-  --ptr-blade: rgba(195, 208, 203, 0.92);
+  --ptr-blade: rgba(201, 209, 217, 0.92);
   position: relative;
   width: var(--ptr-size);
   height: var(--ptr-size);
@@ -3239,11 +3258,11 @@ body.light-mode .toast {
 }
 
 #pull-to-refresh.ready #ptr-icon {
-  --ptr-blade: rgba(242, 247, 244, 0.98);
+  --ptr-blade: rgba(240, 246, 252, 0.98);
 }
 
 #pull-to-refresh.loading #ptr-icon {
-  --ptr-blade: rgba(242, 247, 244, 0.98);
+  --ptr-blade: rgba(240, 246, 252, 0.98);
   animation: ptr-spin 0.85s steps(12) infinite;
 }
 
