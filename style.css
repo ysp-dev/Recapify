@@ -405,9 +405,23 @@ body.light-mode .logo-image-light {
   margin: 0;
 }
 
+.apikey-collapse {
+  margin-left: 4px;
+  background: color-mix(in srgb, var(--bg-surface-elevated) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-light) 72%, transparent);
+  color: var(--text-secondary);
+}
+
+.apikey-collapse:hover {
+  border-color: var(--border-glow);
+  color: var(--text-primary);
+}
+
 .apikey-input-wrapper.collapsed {
   gap: 0;
   padding-right: 3px;
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .apikey-input-wrapper.collapsed .apikey-input,
@@ -3106,6 +3120,10 @@ body.light-mode .toast {
 
   .apikey-input-wrapper {
     width: 100%;
+  }
+
+  .apikey-input-wrapper.collapsed {
+    width: auto;
   }
 
   .apikey-input {

@@ -52,7 +52,7 @@ function setupApiKey() {
     elements.apiKeyWrapper.classList.toggle('collapsed', isCollapsed);
     elements.btnCollapseApiKey.setAttribute('title', isCollapsed ? 'API Key 펼치기' : 'API Key 접기');
     elements.btnCollapseApiKey.setAttribute('aria-label', isCollapsed ? 'API Key 펼치기' : 'API Key 접기');
-    elements.btnCollapseApiKey.innerHTML = '<i data-lucide="' + (isCollapsed ? 'chevrons-left' : 'chevrons-right') + '"></i>';
+    elements.btnCollapseApiKey.innerHTML = '<i data-lucide="' + (isCollapsed ? 'plus' : 'minus') + '"></i>';
     if (isCollapsed) setApiKeyReveal(false);
     if (window.lucide) window.lucide.createIcons();
   }
