@@ -1,15 +1,18 @@
 /* ==========================================================================
    Recapify - Shared Configuration
-   OpenAI GPT-4o-transcribe + GPT-5.5 | file:// compatible (no ES modules)
+   OpenAI GPT-4o-transcribe + Claude Sonnet | file:// compatible (no ES modules)
    ========================================================================== */
 
 const OPENAI_API_BASE = 'https://api.openai.com/v1';
+const ANTHROPIC_API_BASE = 'https://api.anthropic.com/v1';
+const ANTHROPIC_VERSION = '2023-06-01';
 const MAX_DIRECT_UPLOAD_BYTES = 24 * 1024 * 1024;
 const MAX_DIRECT_TRANSCRIBE_DURATION_SEC = 1350; // 모델 1400초 제한에 여유를 둔 직접 전송 한도
 const CHUNK_DURATION_SEC = 600;                  // 10분 단위 청크 (16kHz mono WAV 기준 ~18MB)
 const WHISPER_SAMPLE_RATE = 16000;               // 다운샘플 목표 (25MB 제한 내 최대 청크 확보)
 const MAX_OPENAI_REQUEST_RETRIES = 3;
 const RESPONSE_API_MODEL_PATTERN = /^gpt-5(\.|-|$)/;
+const CLAUDE_MODEL_PATTERN = /^claude-/;
 const TRANSCRIPT_CACHE_KEY = 'recapify_transcript_cache_v1';
 const SUMMARY_PROMPT_HISTORY_KEY = 'recapify_summary_prompt_history_v1';
 const MAX_SUMMARY_PROMPT_HISTORY = 5;
@@ -58,7 +61,8 @@ const SUMMARY_SYSTEM_PROMPTS = {
 
 var state = {
   apiKey: '',
-  model: 'gpt-5.5',
+  anthropicApiKey: '',
+  model: 'claude-sonnet-4-6',
   transcribeModel: 'gpt-4o-transcribe',
   language: 'ko',
   summaryPrompt: '',
@@ -94,7 +98,7 @@ var tts = {
   utterance: null
 };
 
-// GPT summary/chat requests are queued to avoid concurrent TPM spikes.
+// Text generation requests are queued to avoid concurrent rate-limit spikes.
 var openAITextRequestQueue = Promise.resolve();
 
 // DOM Elements
@@ -103,6 +107,10 @@ var elements = {
   apiKeyWrapper: document.getElementById('api-key-wrapper'),
   btnToggleApiKey: document.getElementById('btn-toggle-api-key'),
   btnCollapseApiKey: document.getElementById('btn-collapse-api-key'),
+  anthropicApiKeyInput: document.getElementById('anthropic-api-key'),
+  anthropicApiKeyWrapper: document.getElementById('anthropic-api-key-wrapper'),
+  btnToggleAnthropicApiKey: document.getElementById('btn-toggle-anthropic-api-key'),
+  btnCollapseAnthropicApiKey: document.getElementById('btn-collapse-anthropic-api-key'),
 
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
   themeToggleIcon: document.getElementById('theme-toggle-icon'),

@@ -45,15 +45,25 @@
         <button type="button" id="btn-theme-toggle" class="btn btn-secondary btn-icon" title="테마 변경" aria-label="테마 변경">
           <i data-lucide="sun" id="theme-toggle-icon"></i>
         </button>
-        <!-- Secure API Key Input -->
+        <!-- Secure API Key Inputs -->
         <div class="apikey-container">
           <div id="api-key-wrapper" class="apikey-input-wrapper">
             <i class="apikey-key-icon" data-lucide="key-round"></i>
-            <input type="password" id="api-key" class="apikey-input" placeholder="API Key" autocomplete="off">
+            <input type="password" id="api-key" class="apikey-input" placeholder="OpenAI API Key" autocomplete="off">
             <button type="button" id="btn-toggle-api-key" class="apikey-toggle" title="API Key 보이기" aria-label="API Key 보이기">
               <i data-lucide="eye"></i>
             </button>
             <button type="button" id="btn-collapse-api-key" class="apikey-toggle apikey-collapse" title="API Key 접기" aria-label="API Key 접기">
+              <i data-lucide="minus"></i>
+            </button>
+          </div>
+          <div id="anthropic-api-key-wrapper" class="apikey-input-wrapper">
+            <i class="apikey-key-icon" data-lucide="sparkles"></i>
+            <input type="password" id="anthropic-api-key" class="apikey-input" placeholder="Anthropic API Key" autocomplete="off">
+            <button type="button" id="btn-toggle-anthropic-api-key" class="apikey-toggle" title="Anthropic API Key 보이기" aria-label="Anthropic API Key 보이기">
+              <i data-lucide="eye"></i>
+            </button>
+            <button type="button" id="btn-collapse-anthropic-api-key" class="apikey-toggle apikey-collapse" title="Anthropic API Key 접기" aria-label="Anthropic API Key 접기">
               <i data-lucide="minus"></i>
             </button>
           </div>
@@ -85,9 +95,9 @@
 
             <!-- Model Selection -->
             <div class="form-group">
-              <label for="select-model">GPT 모델 (요약·Q&A)</label>
+              <label for="select-model">AI 모델 (요약·Q&A)</label>
               <select id="select-model" class="select-custom">
-                <option value="gpt-5.5" selected>GPT-5.5 (최신·최고품질)</option>
+                <option value="claude-sonnet-4-6" selected>Claude Sonnet 4.6 (기본)</option>
                 <option value="gpt-5.4-mini">GPT-5.4 mini (권장·균형)</option>
                 <option value="gpt-5.4-nano">GPT-5.4 nano (빠름·저비용)</option>
                 <option value="gpt-4.1">GPT-4.1 (이전 안정)</option>
@@ -317,7 +327,7 @@
                 </div>
 
                 <div class="viewer-actions-row">
-                  <span id="summary-badge" class="badge-accent">OpenAI GPT 분석</span>
+                  <span id="summary-badge" class="badge-accent">AI 분석</span>
                   <div class="export-actions">
                     <button type="button" id="btn-copy-summary" class="btn btn-secondary btn-sm" disabled>
                       <i data-lucide="copy"></i> 복사
@@ -376,7 +386,7 @@
   <footer class="site-footer">
     <span class="footer-credit">Built by Brian Park</span>
     <span class="footer-separator"></span>
-    <span class="footer-model">Powered by ChatGPT models</span>
+    <span class="footer-model">Powered by Claude and OpenAI STT</span>
   </footer>
 
   <!-- Notification Popup Toast -->
@@ -386,9 +396,9 @@
   </div>
 
   <!-- App scripts (classic scripts keep file:// compatibility) -->
-  <script src="js/state.js?v=api-key-plus-minus"></script>
+  <script src="js/state.js?v=claude-sonnet-4-6"></script>
   <script src="js/api.js"></script>
-  <script src="js/ui.js?v=api-key-plus-minus"></script>
+  <script src="js/ui.js?v=claude-sonnet-4-6"></script>
   <script src="js/audio.js"></script>
   <script src="js/transcript.js"></script>
   <script src="js/summary.js"></script>

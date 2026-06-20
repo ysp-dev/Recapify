@@ -94,8 +94,9 @@ function runActiveSummary() {
     elements.inputSummaryPrompt.focus();
     return;
   }
-  if (!state.apiKey) {
-    showToast('OpenAI API Key를 입력해주세요.');
+  var apiKey = selectedTextApiKey();
+  if (!apiKey) {
+    showToast(selectedTextProviderName() + '를 입력해주세요.');
     return;
   }
   if (state.summaryPromptDirty) {
@@ -134,6 +135,12 @@ async function triggerSummaryFormatLoad(format) {
     return;
   }
 
+  var apiKey = selectedTextApiKey();
+  if (!apiKey) {
+    showToast(selectedTextProviderName() + '를 입력해주세요.');
+    return;
+  }
+
   renderSummaryLoadingState();
   elements.btnCopySummary.disabled = true;
   elements.btnDownloadSummary.disabled = true;
@@ -141,7 +148,7 @@ async function triggerSummaryFormatLoad(format) {
 
   try {
     var streamedText = '';
-    state.summaryRequests[format] = generateSummary(state.transcriptText, format, state.apiKey, state.model, state.summaryPrompt, function (delta, fullText) {
+    state.summaryRequests[format] = generateSummary(state.transcriptText, format, apiKey, state.model, state.summaryPrompt, function (delta, fullText) {
       streamedText = fullText || (streamedText + delta);
       if (state.activeSummaryFormat === format) {
         renderSummaryMarkdown(streamedText, { streaming: true });
@@ -218,7 +225,5 @@ function renderSummaryReadyState() {
 
 function setSummaryBadgeRunning(isRunning) {
   elements.summaryBadge.classList.toggle('running', isRunning);
-  elements.summaryBadge.textContent = isRunning ? 'OpenAI GPT 분석 중...' : 'OpenAI GPT 분석';
+  elements.summaryBadge.textContent = isRunning ? 'AI 분석 중...' : 'AI 분석';
 }
-
-

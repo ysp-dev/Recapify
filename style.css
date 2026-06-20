@@ -330,6 +330,9 @@ body.light-mode .logo-image-light {
 .apikey-container {
   display: flex;
   align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .apikey-input-wrapper {
@@ -425,7 +428,7 @@ body.light-mode .logo-image-light {
 }
 
 .apikey-input-wrapper.collapsed .apikey-input,
-.apikey-input-wrapper.collapsed #btn-toggle-api-key {
+.apikey-input-wrapper.collapsed .apikey-toggle:not(.apikey-collapse) {
   width: 0;
   min-width: 0;
   margin: 0;

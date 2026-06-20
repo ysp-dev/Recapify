@@ -1,5 +1,5 @@
 /* ==========================================================================
-   OpenAI API Functions
+   API Functions
    ========================================================================== */
 
 async function transcribeAudio(audioFile, language, apiKey, transcribeModel, signal, chunkContext) {
@@ -63,6 +63,34 @@ async function generateSummary(transcriptText, format, apiKey, model, customProm
   }
 
   return enqueueOpenAITextRequest(async function () {
+    if (isClaudeModel(model)) {
+      var userContent = '다음 오디오 전사록을 분석하여 요청한 형식으로 정리해 주세요:\n\n---\n' + transcriptText + '\n---';
+      var claudeBody = {
+        model: model,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userContent }],
+        max_tokens: SUMMARY_MAX_TOKENS[format] || 2000,
+        temperature: 0.7
+      };
+
+      if (typeof onDelta === 'function') {
+        claudeBody.stream = true;
+        return streamOpenAITextResponse(ANTHROPIC_API_BASE + '/messages', {
+          method: 'POST',
+          headers: anthropicHeaders(apiKey),
+          body: JSON.stringify(claudeBody)
+        }, onDelta, '요약 생성');
+      }
+
+      var claudeData = await fetchOpenAIJsonWithRetry(ANTHROPIC_API_BASE + '/messages', {
+        method: 'POST',
+        headers: anthropicHeaders(apiKey),
+        body: JSON.stringify(claudeBody)
+      }, '요약 생성');
+
+      return extractAnthropicResponseText(claudeData);
+    }
+
     if (isResponsesModel(model)) {
       var responsesBody = {
         model: model,
@@ -126,6 +154,21 @@ async function generateSummary(transcriptText, format, apiKey, model, customProm
 async function generateChapters(transcriptText, apiKey, model) {
   var systemPrompt = '전사록을 시간대별 주요 토픽 챕터로 나누는 편집자입니다. 반드시 마크다운 목록으로만 답하고, 각 항목은 [MM:SS] 형식 시간과 6~12단어 제목, 한 문장 설명을 포함하세요.';
   return enqueueOpenAITextRequest(async function () {
+    if (isClaudeModel(model)) {
+      var claudeData = await fetchOpenAIJsonWithRetry(ANTHROPIC_API_BASE + '/messages', {
+        method: 'POST',
+        headers: anthropicHeaders(apiKey),
+        body: JSON.stringify({
+          model: model,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: '다음 전사록의 시간대를 참고해 챕터를 생성하세요:\n\n---\n' + transcriptText + '\n---' }],
+          max_tokens: 900,
+          temperature: 0.4
+        })
+      }, '챕터 생성');
+      return extractAnthropicResponseText(claudeData);
+    }
+
     if (isResponsesModel(model)) {
       var responseData = await fetchOpenAIJsonWithRetry(OPENAI_API_BASE + '/responses', {
         method: 'POST',
@@ -166,16 +209,35 @@ async function askChatAboutTranscript(transcriptText, userQuery, chatHistory, ap
   var instructions = '당신은 전문 오디오 콘텐츠 어시스턴트입니다. 아래 오디오 전사록을 완전히 이해하고 있으며, 사용자의 질문에 전사록 내용을 기반으로 정확하고 친절하게 답변합니다. 전사록에 없는 내용은 추측하지 마세요.\n\n[오디오 전사록]\n---\n' + transcriptText + '\n---';
   var messages = [{ role: 'system', content: instructions }];
   var responseInput = [];
+  var claudeMessages = [];
 
   for (var i = 0; i < chatHistory.length; i++) {
     var msg = chatHistory[i];
     messages.push({ role: msg.role === 'model' ? 'assistant' : 'user', content: msg.text });
     responseInput.push({ role: msg.role === 'model' ? 'assistant' : 'user', content: msg.text });
+    claudeMessages.push({ role: msg.role === 'model' ? 'assistant' : 'user', content: msg.text });
   }
   messages.push({ role: 'user', content: userQuery });
   responseInput.push({ role: 'user', content: userQuery });
+  claudeMessages.push({ role: 'user', content: userQuery });
 
   return enqueueOpenAITextRequest(async function () {
+    if (isClaudeModel(model)) {
+      var claudeData = await fetchOpenAIJsonWithRetry(ANTHROPIC_API_BASE + '/messages', {
+        method: 'POST',
+        headers: anthropicHeaders(apiKey),
+        body: JSON.stringify({
+          model: model,
+          system: instructions,
+          messages: claudeMessages,
+          max_tokens: 1200,
+          temperature: 0.7
+        })
+      }, 'Q&A 답변');
+
+      return extractAnthropicResponseText(claudeData);
+    }
+
     if (isResponsesModel(model)) {
       var responseData = await fetchOpenAIJsonWithRetry(OPENAI_API_BASE + '/responses', {
         method: 'POST',
@@ -208,6 +270,44 @@ async function askChatAboutTranscript(transcriptText, userQuery, chatHistory, ap
 
 function isResponsesModel(model) {
   return RESPONSE_API_MODEL_PATTERN.test(model || '');
+}
+
+
+
+function isClaudeModel(model) {
+  return CLAUDE_MODEL_PATTERN.test(model || '');
+}
+
+
+
+function selectedTextApiKey() {
+  return isClaudeModel(state.model) ? state.anthropicApiKey : state.apiKey;
+}
+
+
+
+function selectedTextProviderName() {
+  return isClaudeModel(state.model) ? 'Anthropic API Key' : 'OpenAI API Key';
+}
+
+
+
+function anthropicHeaders(apiKey) {
+  return {
+    'x-api-key': apiKey,
+    'anthropic-version': ANTHROPIC_VERSION,
+    'anthropic-dangerous-direct-browser-access': 'true',
+    'Content-Type': 'application/json'
+  };
+}
+
+
+
+function extractAnthropicResponseText(data) {
+  if (!data || !Array.isArray(data.content)) return '';
+  return data.content.map(function (part) {
+    return typeof part.text === 'string' ? part.text : '';
+  }).join('').trim();
 }
 
 
@@ -324,6 +424,7 @@ function extractDeltaFromSSEBlock(block) {
     try {
       var event = JSON.parse(payload);
       if (event.type === 'response.output_text.delta' && typeof event.delta === 'string') return event.delta;
+      if (event.type === 'content_block_delta' && event.delta && typeof event.delta.text === 'string') return event.delta.text;
       if (event.choices && event.choices[0] && event.choices[0].delta && typeof event.choices[0].delta.content === 'string') {
         return event.choices[0].delta.content;
       }
@@ -384,5 +485,4 @@ function enqueueOpenAITextRequest(task) {
   openAITextRequestQueue = run.catch(function () {});
   return run;
 }
-
 

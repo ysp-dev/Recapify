@@ -23,8 +23,12 @@ async function triggerSubmitChat() {
   var typingId = appendChatTypingIndicator();
 
   try {
+    var apiKey = selectedTextApiKey();
+    if (!apiKey) {
+      throw new Error(selectedTextProviderName() + '를 입력해주세요.');
+    }
     var aiResponse = await askChatAboutTranscript(
-      state.transcriptText, query, state.chatHistory, state.apiKey, state.model
+      state.transcriptText, query, state.chatHistory, apiKey, state.model
     );
     state.chatHistory.push({ role: 'user', text: query });
     state.chatHistory.push({ role: 'model', text: aiResponse });
@@ -109,5 +113,4 @@ function removeChatBubble(id) {
   var el = document.getElementById(id);
   if (el) el.remove();
 }
-
 

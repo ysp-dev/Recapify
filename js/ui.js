@@ -41,54 +41,77 @@ function setupTheme() {
 
 
 function setupApiKey() {
-  function setApiKeyReveal(isRevealed) {
-    elements.apiKeyInput.type = isRevealed ? 'text' : 'password';
-    elements.btnToggleApiKey.setAttribute('title', isRevealed ? 'API Key 숨기기' : 'API Key 보이기');
-    elements.btnToggleApiKey.setAttribute('aria-label', isRevealed ? 'API Key 숨기기' : 'API Key 보이기');
-    elements.btnToggleApiKey.innerHTML = '<i data-lucide="' + (isRevealed ? 'eye-off' : 'eye') + '"></i>';
+  setupSecretKeyInput({
+    storageKey: 'recapify_api_key',
+    stateKey: 'apiKey',
+    input: elements.apiKeyInput,
+    wrapper: elements.apiKeyWrapper,
+    toggleButton: elements.btnToggleApiKey,
+    collapseButton: elements.btnCollapseApiKey,
+    label: 'OpenAI API Key'
+  });
+  setupSecretKeyInput({
+    storageKey: 'recapify_anthropic_api_key',
+    stateKey: 'anthropicApiKey',
+    input: elements.anthropicApiKeyInput,
+    wrapper: elements.anthropicApiKeyWrapper,
+    toggleButton: elements.btnToggleAnthropicApiKey,
+    collapseButton: elements.btnCollapseAnthropicApiKey,
+    label: 'Anthropic API Key'
+  });
+}
+
+
+
+function setupSecretKeyInput(config) {
+  function setReveal(isRevealed) {
+    config.input.type = isRevealed ? 'text' : 'password';
+    config.toggleButton.setAttribute('title', isRevealed ? config.label + ' 숨기기' : config.label + ' 보이기');
+    config.toggleButton.setAttribute('aria-label', isRevealed ? config.label + ' 숨기기' : config.label + ' 보이기');
+    config.toggleButton.innerHTML = '<i data-lucide="' + (isRevealed ? 'eye-off' : 'eye') + '"></i>';
   }
 
-  function setApiKeyCollapsed(isCollapsed) {
-    elements.apiKeyWrapper.classList.toggle('collapsed', isCollapsed);
-    elements.btnCollapseApiKey.setAttribute('title', isCollapsed ? 'API Key 펼치기' : 'API Key 접기');
-    elements.btnCollapseApiKey.setAttribute('aria-label', isCollapsed ? 'API Key 펼치기' : 'API Key 접기');
-    elements.btnCollapseApiKey.innerHTML = '<i data-lucide="' + (isCollapsed ? 'plus' : 'minus') + '"></i>';
-    if (isCollapsed) setApiKeyReveal(false);
+  function setCollapsed(isCollapsed) {
+    config.wrapper.classList.toggle('collapsed', isCollapsed);
+    config.collapseButton.setAttribute('title', isCollapsed ? config.label + ' 펼치기' : config.label + ' 접기');
+    config.collapseButton.setAttribute('aria-label', isCollapsed ? config.label + ' 펼치기' : config.label + ' 접기');
+    config.collapseButton.innerHTML = '<i data-lucide="' + (isCollapsed ? 'plus' : 'minus') + '"></i>';
+    if (isCollapsed) setReveal(false);
     if (window.lucide) window.lucide.createIcons();
   }
 
-  var savedKey = localStorage.getItem('recapify_api_key');
+  var savedKey = localStorage.getItem(config.storageKey);
   if (savedKey) {
-    state.apiKey = savedKey;
-    elements.apiKeyInput.value = savedKey;
-    elements.apiKeyWrapper.classList.add('secure');
+    state[config.stateKey] = savedKey;
+    config.input.value = savedKey;
+    config.wrapper.classList.add('secure');
   }
-  setApiKeyCollapsed(!!savedKey);
+  setCollapsed(!!savedKey);
 
-  elements.apiKeyInput.addEventListener('input', function (e) {
+  config.input.addEventListener('input', function (e) {
     var key = e.target.value.trim();
-    state.apiKey = key;
+    state[config.stateKey] = key;
     if (key) {
-      localStorage.setItem('recapify_api_key', key);
-      elements.apiKeyWrapper.classList.add('secure');
+      localStorage.setItem(config.storageKey, key);
+      config.wrapper.classList.add('secure');
     } else {
-      localStorage.removeItem('recapify_api_key');
-      elements.apiKeyWrapper.classList.remove('secure');
+      localStorage.removeItem(config.storageKey);
+      config.wrapper.classList.remove('secure');
     }
   });
 
-  elements.btnToggleApiKey.addEventListener('click', function () {
-    if (elements.apiKeyWrapper.classList.contains('collapsed')) setApiKeyCollapsed(false);
-    setApiKeyReveal(elements.apiKeyInput.type === 'password');
+  config.toggleButton.addEventListener('click', function () {
+    if (config.wrapper.classList.contains('collapsed')) setCollapsed(false);
+    setReveal(config.input.type === 'password');
     if (window.lucide) window.lucide.createIcons();
   });
 
-  elements.btnCollapseApiKey.addEventListener('click', function () {
-    var isCollapsed = elements.apiKeyWrapper.classList.contains('collapsed');
-    setApiKeyCollapsed(!isCollapsed);
+  config.collapseButton.addEventListener('click', function () {
+    var isCollapsed = config.wrapper.classList.contains('collapsed');
+    setCollapsed(!isCollapsed);
     if (isCollapsed) {
-      elements.apiKeyInput.focus();
-      elements.apiKeyInput.select();
+      config.input.focus();
+      config.input.select();
     }
   });
 }

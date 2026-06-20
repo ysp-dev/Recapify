@@ -630,15 +630,16 @@ async function triggerGenerateChapters() {
     showToast('먼저 전사록을 준비해 주세요.');
     return;
   }
-  if (!state.apiKey) {
-    showToast('OpenAI API Key를 입력해주세요.');
+  var apiKey = selectedTextApiKey();
+  if (!apiKey) {
+    showToast(selectedTextProviderName() + '를 입력해주세요.');
     return;
   }
 
   elements.btnGenerateChapters.disabled = true;
   renderChaptersLoadingState();
   try {
-    state.chaptersMarkdown = await generateChapters(state.transcriptText, state.apiKey, state.model);
+    state.chaptersMarkdown = await generateChapters(state.transcriptText, apiKey, state.model);
     renderChapters(state.chaptersMarkdown);
     saveTranscriptCache();
   } catch (err) {
@@ -704,5 +705,4 @@ function getTranscriptDownloadName() {
   var sourceName = state.transcriptSourceName || (state.currentFile && state.currentFile.name) || 'transcript';
   return sourceName.replace(/\.[^.]+$/, '') + '_transcript.txt';
 }
-
 
