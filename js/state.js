@@ -1,6 +1,6 @@
 /* ==========================================================================
    Recapify - Shared Configuration
-   OpenAI GPT-4o-transcribe + Claude Sonnet | file:// compatible (no ES modules)
+   OpenAI GPT-4o-transcribe + Claude Opus 5 | file:// compatible (no ES modules)
    ========================================================================== */
 
 const OPENAI_API_BASE = 'https://api.openai.com/v1';
@@ -62,7 +62,7 @@ const SUMMARY_SYSTEM_PROMPTS = {
 var state = {
   apiKey: '',
   anthropicApiKey: '',
-  model: 'claude-sonnet-4-6',
+  model: 'claude-opus-5',
   transcribeModel: 'gpt-4o-transcribe',
   language: 'ko',
   summaryPrompt: '',

@@ -69,8 +69,8 @@ async function generateSummary(transcriptText, format, apiKey, model, customProm
         model: model,
         system: systemPrompt,
         messages: [{ role: 'user', content: userContent }],
-        max_tokens: SUMMARY_MAX_TOKENS[format] || 2000,
-        temperature: 0.7
+        max_tokens: (SUMMARY_MAX_TOKENS[format] || 2000) * 2,
+        output_config: { effort: 'low' }
       };
 
       if (typeof onDelta === 'function') {
@@ -162,8 +162,8 @@ async function generateChapters(transcriptText, apiKey, model) {
           model: model,
           system: systemPrompt,
           messages: [{ role: 'user', content: '다음 전사록의 시간대를 참고해 챕터를 생성하세요:\n\n---\n' + transcriptText + '\n---' }],
-          max_tokens: 900,
-          temperature: 0.4
+          max_tokens: 2400,
+          output_config: { effort: 'low' }
         })
       }, '챕터 생성');
       return extractAnthropicResponseText(claudeData);
@@ -230,8 +230,8 @@ async function askChatAboutTranscript(transcriptText, userQuery, chatHistory, ap
           model: model,
           system: instructions,
           messages: claudeMessages,
-          max_tokens: 1200,
-          temperature: 0.7
+          max_tokens: 3000,
+          output_config: { effort: 'low' }
         })
       }, 'Q&A 답변');
 
